@@ -17,3 +17,6 @@ nbproject/
 # Distribution
 /dist
 /build
+
+# DEV FILES
+sftp-config.json 

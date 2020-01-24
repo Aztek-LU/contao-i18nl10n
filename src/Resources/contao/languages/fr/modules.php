@@ -17,7 +17,11 @@ $GLOBALS['TL_LANG']['MOD']['i18nl10n'] = array
     'Pages multilingues',
     'Créez une arborescence multilingue unique en ajoutant des langages aux pages et en localisant les éléments de contenu.'
 );
-
+$GLOBALS['TL_LANG']['MOD']['i18nl10n_settings'] = array
+(
+    'Configuration i18nl10n',
+    'Configurez le comportement du module multilingue i18nl10n.'
+);
 
 /**
  * Front end modules

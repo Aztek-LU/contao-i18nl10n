@@ -1,0 +1,32 @@
+<!-- Display Module -->
+<div class="tl_i18nl10n_configure">
+	<div style="padding:1em">
+		<h3>Elements to configure as multilingual</h3>
+		<p>This module provides a generic method to handle localizations associations between elements. Each table selected will be updated to add two columns : i18nl10n_id and i18nl10n_lang.</p>
+		<p>i18nl10n_id will be a common id between elements on the same type and level.</p>
+		<p>i18nl10n_lang will be the language of the current element</p>
+	</div>
+
+	<form id="tl_i18nl10n_configure" class="tl_form tl_edit_form" action="<?= \Environment::get('request') ?>" method="POST">
+		<div class="tl_form_edit">
+			<input type="hidden" name="FORM_SUBMIT" value="tl_i18nl10n_configure">
+			<input type="hidden" name="REQUEST_TOKEN" value="<?= \RequestToken::get() ?>">
+
+			<fieldset id="tl_i18nl10n_configure_tables" class="tl_box">
+				<div class="widget">
+					<h3><label>Tables concerned</label></h3>
+					<select name="i18nl10n_tables[]" id="ctrl_i18nl10n_tables" class="tl_select tl_chosen" onfocus="Backend.getScrollOffset()" multiple>
+						<?php foreach($this->tables as $t): ?>
+						<option value="<?= $t['value'] ?>"<?= $t['selected'] ? ' selected' : '' ?>><?= $t['label'] ?></option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+			</fieldset>
+		</div>
+		<div class="tl_formbody_submit">
+			<div class="tl_submit_container">
+			  <button type="submit" name="save" id="save" class="tl_submit" accesskey="s">Sauvegarder</button>
+			</div>
+		</div>
+	</form>
+</div>
