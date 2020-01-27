@@ -40,7 +40,7 @@ class Configure extends \BackendModule
         $arrI18nl10nTables = [];
 
         // Check if we chose certain of this tables in the config
-        if (\Config::has('i18nl10n_tables') && !empty(\Config::get('i18nl10n_tables'))) {
+        if (\Config::has('i18nl10n_tables') && !empty(deserialize(\Config::get('i18nl10n_tables')))) {
             $arrI18nl10nTables = deserialize(\Config::get('i18nl10n_tables'));
         }
 
@@ -61,7 +61,7 @@ class Configure extends \BackendModule
                     $arrI18nl10nTables[] = $t;
                 }
             }
-            
+
             // and save
             \Config::persist('i18nl10n_tables', serialize($arrI18nl10nTables));
         }

@@ -62,6 +62,7 @@ $GLOBALS['TL_HOOKS']['generateBreadcrumb'][]    = ['Verstaerker\I18nl10nBundle\H
 $GLOBALS['TL_HOOKS']['executePostActions'][]    = ['Verstaerker\I18nl10nBundle\Hook\ExecutePostActionsHook', 'executePostActions'];
 $GLOBALS['TL_HOOKS']['isVisibleElement'][]      = ['Verstaerker\I18nl10nBundle\Hook\IsVisibleElementHook', 'isVisibleElement'];
 $GLOBALS['TL_HOOKS']['replaceInsertTags'][]     = ['Verstaerker\I18nl10nBundle\Hook\ReplaceInsertTagsHook', 'replaceInsertTags'];
+$GLOBALS['TL_HOOKS']['loadDataContainer'][]     = ['Verstaerker\I18nl10nBundle\Hook\LoadDataContainerHook', 'addColumns'];
 $GLOBALS['TL_HOOKS']['loadDataContainer'][]     = ['Verstaerker\I18nl10nBundle\Hook\LoadDataContainerHook', 'setLanguages'];
 $GLOBALS['TL_HOOKS']['getArticle'][]            = ['Verstaerker\I18nl10nBundle\Hook\GetArticleHook', 'checkIfEmpty'];
 
@@ -98,4 +99,5 @@ $GLOBALS['TL_PERMISSIONS'][]                    = 'i18nl10n_languages';
 /**
  * Adding custom widgets
  */
-$GLOBALS['BE_FFL']['i18nl10nMetaWizard']        = 'Verstaerker\I18nl10nBundle\Widgets\I18nl10nMetaWizard';
+$GLOBALS['BE_FFL']['i18nl10nMetaWizard']                = 'Verstaerker\I18nl10nBundle\Widgets\I18nl10nMetaWizard';
+$GLOBALS['BE_FFL']['i18nl10nAssociatedLocationsWizard'] = 'Verstaerker\I18nl10nBundle\Widgets\I18nl10nAssociatedLocationsWizard';
