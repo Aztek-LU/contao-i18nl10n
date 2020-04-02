@@ -33,11 +33,6 @@ class InitializeSystemHook extends System
      */
     public function initializeSystem()
     {
-        // Show all contents in Backend
-        if (TL_MODE !== 'FE') {
-            return true;
-        }
-
         // Catch Facebook token fbclid and redirect without him (trigger 404 errors)...
         if (strpos(\Contao\Environment::get('request'), '?fbclid')) {
             \Contao\Controller::redirect(\strtok(\Contao\Environment::get('request'), '?'));
@@ -46,7 +41,11 @@ class InitializeSystemHook extends System
         // Get locale information for system and user
         $arrLanguages = I18nl10n::getInstance()->getAvailableLanguages();
         $userLanguage = $this->request->getLocale();
+        $pathInfo = rawurldecode($this->request->getPathInfo());
 
+        if(preg_match('@^/([a-z]{2}(-[A-Z]{2})?)/$@', $pathInfo, $matches)) {
+            $this->request->setLocale($matches[1]);
+        }
 
         // Fail if no languages were configured
         if (\count($arrLanguages) === 0) {
