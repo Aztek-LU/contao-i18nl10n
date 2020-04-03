@@ -1,0 +1,73 @@
+<?php
+
+$header = <<<EOF
+i18nl10n Contao Module
+
+The i18nl10n module for Contao allows you to manage multilingual content
+on the element level rather than with page trees.
+
+@copyright   Copyright (c) 2014-2020 Verstärker, Patric Eberle
+@author      Patric Eberle <line-in@derverstaerker.ch>
+@author      Claudio De Facci <claudio@exploreimpact.de>
+@author      Web ex Machina <contact@webexmachina.fr>
+@category    ContaoBundle
+@package     exploreimpact/contao-i18nl10n
+@link        https://github.com/exploreimpact/contao-i18nl10n
+EOF;
+
+return PhpCsFixer\Config::create()
+    ->setRules([
+        '@Symfony' => true,
+        '@Symfony:risky' => true,
+        '@PHP71Migration' => true,
+        '@PHP71Migration:risky' => true,
+        '@PHPUnit60Migration:risky' => true,
+        'align_multiline_comment' => true,
+        'array_indentation' => true,
+        'array_syntax' => ['syntax' => 'short'],
+        'combine_consecutive_issets' => true,
+        'combine_consecutive_unsets' => true,
+        'comment_to_phpdoc' => true,
+        'compact_nullable_typehint' => true,
+        'fully_qualified_strict_types' => true,
+        'header_comment' => ['header' => $header, 'comment_type' => 'PHPDoc'],
+        'heredoc_to_nowdoc' => true,
+        'linebreak_after_opening_tag' => true,
+        'list_syntax' => ['syntax' => 'short'],
+        'multiline_comment_opening_closing' => true,
+        'multiline_whitespace_before_semicolons' => [
+            'strategy' => 'new_line_for_chained_calls',
+        ],
+        'native_function_invocation' => [
+            'include' => ['@compiler_optimized'],
+            'strict' => true,
+        ],
+        'no_alternative_syntax' => true,
+        'no_binary_string' => true,
+        'no_null_property_initialization' => true,
+        'no_superfluous_elseif' => true,
+        'no_superfluous_phpdoc_tags' => true,
+        'no_unreachable_default_argument_value' => true,
+        'no_useless_else' => true,
+        'no_useless_return' => true,
+        'ordered_class_elements' => true,
+        'ordered_imports' => true,
+        'php_unit_method_casing' => true,
+        'php_unit_strict' => true,
+        'phpdoc_add_missing_param_annotation' => true,
+        'phpdoc_order' => true,
+        'phpdoc_trim_consecutive_blank_line_separation' => true,
+        'phpdoc_types_order' => [
+            'null_adjustment' => 'always_last',
+            'sort_algorithm' => 'none',
+        ],
+        'phpdoc_var_annotation_correct_order' => true,
+        'return_assignment' => true,
+        'strict_comparison' => true,
+        'strict_param' => true,
+        'string_line_ending' => true,
+        'void_return' => true,
+    ])
+    ->setRiskyAllowed(true)
+    ->setUsingCache(false)
+;
