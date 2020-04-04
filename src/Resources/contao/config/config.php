@@ -41,7 +41,7 @@ if (TL_MODE === 'BE') {
     ]
 );*/
 
-array_insert(
+/*array_insert(
     $GLOBALS['BE_MOD']['system'],
     array_search('undo', array_keys($GLOBALS['BE_MOD']['system']), true) + 1,
     [
@@ -49,7 +49,7 @@ array_insert(
             'callback' => "Verstaerker\I18nl10nBundle\Backend\Configure",
         ],
     ]
-);
+);*/
 
 /*
  * FRONT END MODULES

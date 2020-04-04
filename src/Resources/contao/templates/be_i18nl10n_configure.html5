@@ -1,10 +1,8 @@
 <!-- Display Module -->
 <div class="tl_i18nl10n_configure">
 	<div style="padding:1em">
-		<h3>Elements to configure as multilingual</h3>
-		<p>This module provides a generic method to handle localizations associations between elements. Each table selected will be updated to add two columns : i18nl10n_id and i18nl10n_lang.</p>
-		<p>i18nl10n_id will be a common id between elements on the same type and level.</p>
-		<p>i18nl10n_lang will be the language of the current element</p>
+		<h3 style="padding-bottom:.6em">Elements to configure as multilingual</h3>
+		<p>This module provides a generic method to handle localizations associations between elements. For each table, we will ask you to select the columns you want to translate.</p>
 	</div>
 
 	<form id="tl_i18nl10n_configure" class="tl_form tl_edit_form" action="<?= \Environment::get('request') ?>" method="POST">

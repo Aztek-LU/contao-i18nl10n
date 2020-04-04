@@ -40,6 +40,9 @@ class Configure extends \BackendModule
      */
     protected function compile(): void
     {
+        // Load User
+        $this->import('Contao\BackendUser', 'User');
+
         // Load all tables
         $arrTables = [];
         $arrI18nl10nTables = [];
