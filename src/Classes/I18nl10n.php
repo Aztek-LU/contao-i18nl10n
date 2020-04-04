@@ -1,15 +1,20 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * i18nl10n Contao Module
  *
  * The i18nl10n module for Contao allows you to manage multilingual content
  * on the element level rather than with page trees.
  *
- *
- * @copyright   Copyright (c) 2014-2015 Verstärker, Patric Eberle
+ * @copyright   Copyright (c) 2014-2020 Verstärker, Patric Eberle
  * @author      Patric Eberle <line-in@derverstaerker.ch>
- * @package     i18nl10n classes
- * @license     LGPLv3 http://www.gnu.org/licenses/lgpl-3.0.html
+ * @author      Claudio De Facci <claudio@exploreimpact.de>
+ * @author      Web ex Machina <contact@webexmachina.fr>
+ * @category    ContaoBundle
+ * @package     exploreimpact/contao-i18nl10n
+ * @link        https://github.com/exploreimpact/contao-i18nl10n
  */
 
 namespace Verstaerker\I18nl10nBundle\Classes;
@@ -17,30 +22,21 @@ namespace Verstaerker\I18nl10nBundle\Classes;
 use Contao\Controller;
 
 /**
- * Class I18nl10n
+ * Class I18nl10n.
  *
  * Global Functions for i18nl10n module
- *
- * @package Verstaerker\I18nl10n\Classes
  */
 class I18nl10n extends Controller
 {
     /**
-     * Class instance
+     * Class instance.
      *
      * @var I18nl10n
      */
     protected static $instance = null;
 
     /**
-     * Current time
-     *
-     * @var Integer
-     */
-    private $time;
-
-    /**
-     * Shared text columns of tl_page and tl_page_i18nl10n
+     * Shared text columns of tl_page and tl_page_i18nl10n.
      *
      * @var array
      */
@@ -55,11 +51,11 @@ class I18nl10n extends Controller
         'timeFormat',
         'datimFormat',
         'start',
-        'stop'
+        'stop',
     ];
 
     /**
-     * Shared meta data columns of tl_page and tl_page_i18nl10n
+     * Shared meta data columns of tl_page and tl_page_i18nl10n.
      *
      * @var array
      */
@@ -69,22 +65,128 @@ class I18nl10n extends Controller
         'sorting',
         'tstamp',
         'alias',
-        'i18nl10n_published'
+        'i18nl10n_published',
     ];
 
     /**
-     * Initialize class
+     * Current time.
+     *
+     * @var int
+     */
+    private $time;
+
+    /**
+     * Initialize class.
      */
     public function __construct()
     {
-        $this->time = \time();
+        $this->time = time();
 
         // Import database handler
         $this->import('Database');
     }
 
     /**
-     * Get table columns
+     * Create instance of i18nl10n class.
+     *
+     * @return I18nl10n
+     */
+    public static function getInstance()
+    {
+        if (null === static::$instance) {
+            static::$instance = new self();
+        }
+
+        return static::$instance;
+    }
+
+    /**
+     * Load i18nl10n config from Contao settings.
+     *
+     * @return array [Config]
+     */
+    public function getI18nl10nConfig()
+    {
+        $config = \Config::get('i18nl10n_fields');
+
+        if (null === $config) {
+            return null;
+        }
+
+        return deserialize($config);
+    }
+
+    /**
+     * Get i18nl10n tables.
+     *
+     * @return array [List of i18nl10n tables]
+     */
+    public function getI18nl10nTables()
+    {
+        $config = $this->getI18nl10nConfig();
+
+        if (null === $config) {
+            return [];
+        }
+
+        $tables = [];
+        foreach ($config as $c) {
+            $table = explode('::', $c);
+
+            if (!\in_array($table[0], $tables, true)) {
+                $tables[] = $table[0];
+            }
+        }
+
+        return $tables;
+    }
+
+    /**
+     * Get i18nl10n fields for a table.
+     *
+     * @param string $strTable [Table fields]
+     *
+     * @return array [List of i18nl10n fields]
+     */
+    public function getI18nl10nFields($strTable)
+    {
+        $config = $this->getI18nl10nConfig();
+
+        if (null === $config) {
+            return [];
+        }
+
+        $fields = [];
+        foreach ($config as $c) {
+            $field = explode('::', $c);
+
+            if ($strTable === $field[0]) {
+                $fields[] = $field[1];
+            }
+        }
+
+        return $fields;
+    }
+
+    /**
+     * Check is a field is in the i18nl10n config.
+     *
+     * @param string $strField [field to test]
+     * @param string $strTable [table wanted]
+     *
+     * @return bool [True if field exists]
+     */
+    public function isI18nl10nField($strField, $strTable)
+    {
+        if (\in_array($strField, $this->getI18nl10nFields($strTable), true)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Get table columns.
      *
      * @param $blnIncludeMeta   boolean     Include meta data fields
      *
@@ -96,31 +198,17 @@ class I18nl10n extends Controller
         $fields = $this->textTableFields;
 
         if ($blnIncludeMeta) {
-            $fields = \array_merge($fields, $this->metaTableFields);
+            $fields = array_merge($fields, $this->metaTableFields);
         }
 
         return $fields;
     }
 
     /**
-     * Create instance of i18nl10n class
+     * Get first published sub page for given l10n id and language.
      *
-     * @return I18nl10n
-     */
-    public static function getInstance()
-    {
-        if (\is_null(static::$instance)) {
-            static::$instance = new I18nl10n();
-        }
-
-        return static::$instance;
-    }
-
-    /**
-     * Get first published sub page for given l10n id and language
-     *
-     * @param   Integer $intId
-     * @param   String  $strLang
+     * @param int    $intId
+     * @param string $strLang
      *
      * @return \Contao\PageModel|null
      */
@@ -134,10 +222,10 @@ class I18nl10n extends Controller
     }
 
     /**
-     * Find localized page for given page object and replace string values
+     * Find localized page for given page object and replace string values.
      *
-     * @param \Contao\PageModel    $objPage
-     * @param String        [$strLang]              Search for a specific language
+     * @param \Contao\PageModel $objPage
+     * @param string        [$strLang]              Search for a specific language
      * @param bool          [$blnTranslateOnly]     Get only translation. If false meta data will also be modified.
      *
      * @return \Contao\PageModel|null
@@ -161,31 +249,33 @@ class I18nl10n extends Controller
             SELECT
                 pid AS l10nPid,
                 alias AS l10nAlias, '
-                . implode(',', $fields) . "
+                .implode(',', $fields)."
             FROM
                 tl_page_i18nl10n
             WHERE
                 pid IN(?,?,?)
                 AND language = ? $sqlPublishedCondition
             ORDER BY "
-               . $this->Database->findInSet('pid', array($objPage->id, $objPage->pid, $objPage->rootId))
+               .$this->Database->findInSet('pid', [$objPage->id, $objPage->pid, $objPage->rootId])
         ;
 
         // Fetch related pages
         $arrL10nRelatedPages = $this->Database
             ->prepare($sql)
             ->execute($objPage->id, $objPage->pid, $objPage->rootId, $strLang ?: $GLOBALS['TL_LANGUAGE'])
-            ->fetchAllassoc();
+            ->fetchAllassoc()
+        ;
 
         // Fetch main page of page branch
         $arrL10nMainPage = $this->Database
             ->prepare('
-                SELECT pid AS l10nPid, alias AS l10nAlias, ' . implode(',', $fields) . '
+                SELECT pid AS l10nPid, alias AS l10nAlias, '.implode(',', $fields).'
                 FROM tl_page_i18nl10n
                 WHERE pid = (SELECT id FROM tl_page WHERE pid = ? AND alias = ?) AND language = ?')
             ->limit(1)
             ->execute($objPage->rootId, $objPage->mainAlias, $strLang ?: $GLOBALS['TL_LANGUAGE'])
-            ->fetchAssoc();
+            ->fetchAssoc()
+        ;
 
         $arrL10nPage = $arrL10nRelatedPages[0];
         $arrL10nParentPage = $arrL10nRelatedPages[1];
@@ -203,7 +293,7 @@ class I18nl10n extends Controller
             foreach ($fields as $field) {
                 if ($arrL10nPage[$field]) {
                     $objPage->$field = $arrL10nPage[$field];
-                } elseif ($field === 'pageTitle') { // If empty pageTitle use title
+                } elseif ('pageTitle' === $field) { // If empty pageTitle use title
                     $objPage->$field = $arrL10nPage['title'];
                 }
             }
@@ -231,7 +321,7 @@ class I18nl10n extends Controller
             }
         } else {
             // else at least keep current language to prevent language change and set flag
-            $objPage->language            = $GLOBALS['TL_LANGUAGE'];
+            $objPage->language = $GLOBALS['TL_LANGUAGE'];
             $objPage->useFallbackLanguage = true;
         }
 
@@ -239,32 +329,32 @@ class I18nl10n extends Controller
     }
 
     /**
-     * Get language definition for given page id and table
+     * Get language definition for given page id and table.
      *
-     * @param   Integer     $intId
-     * @param   String      $strTable
-     * @param   Boolean     [$blnForCurrentUserOnly]  Get only languages for current BE users permission
+     * @param int    $intId
+     * @param string $strTable
+     * @param   bool     [$blnForCurrentUserOnly]  Get only languages for current BE users permission
      *
      * @return array
      */
     public function getLanguagesByPageId($intId, $strTable, $blnForCurrentUserOnly = false)
     {
-        $intId = intval($intId);
+        $intId = (int) $intId;
 
-        if (in_array($strTable, array('tl_page_i18nl10n', 'tl_page'))) {
+        if (\in_array($strTable, ['tl_page_i18nl10n', 'tl_page'], true)) {
             $rootId = $this->getRootIdByPageId($intId, $strTable);
 
             return $this->getLanguagesByRootId($rootId, $blnForCurrentUserOnly);
         }
 
-        return array();
+        return [];
     }
 
     /**
-     * Get root page by page id and table
+     * Get root page by page id and table.
      *
-     * @param   Integer     $intId
-     * @param   Integer     $strTable
+     * @param int $intId
+     * @param int $strTable
      *
      * @return mixed|null
      */
@@ -278,7 +368,8 @@ class I18nl10n extends Controller
                 $arrPage = \Database::getInstance()
                     ->prepare('SELECT * FROM tl_page_i18nl10n WHERE id = ?')
                     ->execute($intId)
-                    ->fetchAssoc();
+                    ->fetchAssoc()
+                ;
 
                 return \PageModel::findWithDetails($arrPage['pid'])->rootId;
         }
@@ -287,10 +378,10 @@ class I18nl10n extends Controller
     }
 
     /**
-     * Get language definition by root page ID
+     * Get language definition by root page ID.
      *
-     * @param   Integer $intId
-     * @param   Boolean $blnForCurrentUserOnly  Get only languages based on current be user permissions
+     * @param int  $intId
+     * @param bool $blnForCurrentUserOnly Get only languages based on current be user permissions
      *
      * @return array
      */
@@ -299,7 +390,8 @@ class I18nl10n extends Controller
         /** @var \Database\Mysqli\Result $objRootPage */
         $objRootPage = \Database::getInstance()
             ->prepare('SELECT * FROM tl_page WHERE id = ?')
-            ->execute($intId);
+            ->execute($intId)
+        ;
 
         $arrLanguages = $this->mapLanguagesFromDatabaseRootPageResult($objRootPage, $blnForCurrentUserOnly);
 
@@ -307,9 +399,9 @@ class I18nl10n extends Controller
     }
 
     /**
-     * Get languages by given or actual domain
+     * Get languages by given or actual domain.
      *
-     * @param   String  [$strDomain]
+     * @param   string  [$strDomain]
      *
      * @return array
      */
@@ -324,7 +416,7 @@ class I18nl10n extends Controller
     }
 
     /**
-     * Get all available languages
+     * Get all available languages.
      *
      * @param bool [$blnForCurrentUserOnly]  Only languages for current logged in user will be returned
      * @param bool [$blnReturnFlat]          Return a flat language array
@@ -344,7 +436,7 @@ class I18nl10n extends Controller
     }
 
     /**
-     * Get all root pages for current Contao setup
+     * Get all root pages for current Contao setup.
      *
      * @return \Database\Result
      */
@@ -354,9 +446,9 @@ class I18nl10n extends Controller
     }
 
     /**
-     * Get a root page by given or actual domain
+     * Get a root page by given or actual domain.
      *
-     * @param String    [$strDomain]    Default: null
+     * @param string    [$strDomain]    Default: null
      *
      * @return \Database\Result
      */
@@ -373,27 +465,76 @@ class I18nl10n extends Controller
             UNION
             (SELECT * FROM tl_page WHERE type = "root" AND dns = "")')
             ->limit(1)
-            ->execute($strDomain);
+            ->execute($strDomain)
+        ;
     }
 
     /**
-     * Get native language names
+     * Get native language names.
      *
      * @return array
      */
     public function getNativeLanguageNames()
     {
         // Var name defined by languages.php (Don't change!)
-        $langsNative = array();
+        $langsNative = [];
 
         // Include languages to get $langsNative
-        include(TL_ROOT . '/vendor/contao/core-bundle/src/Resources/contao/config/languages.php');
+        include TL_ROOT.'/vendor/contao/core-bundle/src/Resources/contao/config/languages.php';
 
         return $langsNative;
     }
 
     /**
-     * Map all default and localized languages from a database result and return as array
+     * Count available root pages.
+     *
+     * @return int
+     */
+    public function countRootPages()
+    {
+        $objRootPages = $this->getAllRootPages();
+
+        return $objRootPages->count();
+    }
+
+    /**
+     * Get language options for user and group permission.
+     *
+     * @return array
+     */
+    public function getLanguageOptionsForUserOrGroup()
+    {
+        return $this->mapLanguageOptionsForUserOrGroup($this->getAvailableLanguages());
+    }
+
+    /**
+     * Get language alternatives for given tl_page id and current language.
+     *
+     * @param \PageModel $objPage
+     *
+     * @return array
+     */
+    public function getLanguageAlternativesByPage($objPage)
+    {
+        $fields = implode(',', $this->getTableFields(true));
+
+        return \Database::getInstance()
+            ->prepare("
+                SELECT $fields
+                FROM tl_page_i18nl10n
+                WHERE pid = ? AND i18nl10n_published = 1 AND language != ?
+                UNION
+                SELECT $fields
+                FROM tl_page
+                WHERE id = ? AND i18nl10n_published = 1 AND language != ?
+            ")
+            ->execute($objPage->id, $objPage->language, $objPage->id, $objPage->language)
+            ->fetchAllAssoc()
+        ;
+    }
+
+    /**
+     * Map all default and localized languages from a database result and return as array.
      *
      * @param \Database\Result $objRootPage
      * @param bool  [$blnForCurrentUserOnly]    Will only return languages for which the current user has permissions
@@ -406,7 +547,7 @@ class I18nl10n extends Controller
         $blnForCurrentUserOnly = false,
         $blnReturnFlat = false
     ) {
-        $arrLanguages = array();
+        $arrLanguages = [];
 
         if ($objRootPage->count()) {
             if ($blnReturnFlat) {
@@ -439,13 +580,12 @@ class I18nl10n extends Controller
                 while ($objRootPage->next()) {
                     $strDns = $objRootPage->dns ?: '*';
 
-                    $arrLanguages[$strDns] = array
-                    (
-                        'rootId'        => $objRootPage->id,
-                        'default'       => $objRootPage->language,
-                        'localizations' => array(),
-                        'languages'     => array()
-                    );
+                    $arrLanguages[$strDns] = [
+                        'rootId' => $objRootPage->id,
+                        'default' => $objRootPage->language,
+                        'localizations' => [],
+                        'languages' => [],
+                    ];
 
                     if (!$blnForCurrentUserOnly || $this->userHasLanguagePermission($objRootPage->id, '*')) {
                         $arrLanguages[$strDns]['languages'][] = $objRootPage->language;
@@ -460,7 +600,7 @@ class I18nl10n extends Controller
                                 )
                             ) {
                                 $arrLanguages[$strDns]['localizations'][] = $localization['language'];
-                                $arrLanguages[$strDns]['languages'][]     = $localization['language'];
+                                $arrLanguages[$strDns]['languages'][] = $localization['language'];
                             }
                         }
                     }
@@ -476,74 +616,25 @@ class I18nl10n extends Controller
     }
 
     /**
-     * Count available root pages
-     *
-     * @return int
-     */
-    public function countRootPages()
-    {
-        $objRootPages = $this->getAllRootPages();
-
-        return $objRootPages->count();
-    }
-
-    /**
-     * Get language options for user and group permission
-     *
-     * @return array
-     */
-    public function getLanguageOptionsForUserOrGroup()
-    {
-        return $this->mapLanguageOptionsForUserOrGroup($this->getAvailableLanguages());
-    }
-
-    /**
-     * Get language alternatives for given tl_page id and current language
-     *
-     * @param \PageModel    $objPage
-     *
-     * @return array
-     */
-    public function getLanguageAlternativesByPage($objPage)
-    {
-        $fields = implode(',', $this->getTableFields(true));
-
-        return \Database::getInstance()
-            ->prepare("
-                SELECT $fields
-                FROM tl_page_i18nl10n
-                WHERE pid = ? AND i18nl10n_published = 1 AND language != ?
-                UNION
-                SELECT $fields
-                FROM tl_page
-                WHERE id = ? AND i18nl10n_published = 1 AND language != ?
-            ")
-            ->execute($objPage->id, $objPage->language, $objPage->id, $objPage->language)
-            ->fetchAllAssoc();
-    }
-
-    /**
-     * Create domain related language array for user and group permission
-     *
-     * @param   array   $arrLanguages
+     * Create domain related language array for user and group permission.
      *
      * @return array
      */
     private function mapLanguageOptionsForUserOrGroup(array $arrLanguages)
     {
-        $arrMappedLanguages = array();
+        $arrMappedLanguages = [];
 
         // Loop Domains
         foreach ($arrLanguages as $domain => $config) {
             // Create Domain identifier
-            $arrDomainLanguages = array(
-                $config['rootId'] . '::*' => ''
-            );
+            $arrDomainLanguages = [
+                $config['rootId'].'::*' => '',
+            ];
 
             // Loop languages
             foreach ($config['languages'] as $language) {
                 // Create unique key by combining root id and language
-                $strKey = $config['rootId'] . '::' . $language;
+                $strKey = $config['rootId'].'::'.$language;
 
                 // Add rootId to make unique
                 $arrDomainLanguages[$strKey] = $language;
@@ -556,10 +647,10 @@ class I18nl10n extends Controller
     }
 
     /**
-     * Check if a user has permission to handle given language by root id
+     * Check if a user has permission to handle given language by root id.
      *
-     * @param   Integer $intRootPageId
-     * @param   String  $strLanguage
+     * @param int    $intRootPageId
+     * @param string $strLanguage
      *
      * @return bool
      */
@@ -567,7 +658,7 @@ class I18nl10n extends Controller
     {
         $arrUserData = \BackendUser::getInstance()->getData();
 
-        return intval($arrUserData['admin']) === 1 ||
-            in_array($intRootPageId . '::' . $strLanguage, (array) $arrUserData['i18nl10n_languages']);
+        return 1 === (int) ($arrUserData['admin']) ||
+            \in_array($intRootPageId.'::'.$strLanguage, (array) $arrUserData['i18nl10n_languages'], true);
     }
 }

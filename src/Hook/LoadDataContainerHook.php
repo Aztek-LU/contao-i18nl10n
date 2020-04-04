@@ -1,5 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * i18nl10n Contao Module
+ *
+ * The i18nl10n module for Contao allows you to manage multilingual content
+ * on the element level rather than with page trees.
+ *
+ * @copyright   Copyright (c) 2014-2020 Verstärker, Patric Eberle
+ * @author      Patric Eberle <line-in@derverstaerker.ch>
+ * @author      Claudio De Facci <claudio@exploreimpact.de>
+ * @author      Web ex Machina <contact@webexmachina.fr>
+ * @category    ContaoBundle
+ * @package     exploreimpact/contao-i18nl10n
+ * @link        https://github.com/exploreimpact/contao-i18nl10n
+ */
+
 namespace Verstaerker\I18nl10nBundle\Hook;
 
 use Verstaerker\I18nl10nBundle\Classes\I18nl10n;
@@ -14,55 +31,14 @@ class LoadDataContainerHook
      *
      * @param [type] $strName [description]
      */
-    public function addColumns($strName)
+    public function addColumns($strName): void
     {
-        // Check if Datacontainer must have i18nl10n columns
-        if (\Config::has('i18nl10n_tables') && !empty(deserialize(\Config::get('i18nl10n_tables')))) {
-            $arrI18nl10nTables = deserialize(\Config::get('i18nl10n_tables'));
-            if (!empty($arrI18nl10nTables) && in_array($strName, $arrI18nl10nTables)) {
-                \System::loadLanguageFile('languages');
+        $objI18nl10n = I18nl10n::getInstance();
 
-                $GLOBALS['TL_DCA'][$strName]['fields']['title']['eval']['tl_class'] .= ' wizard'; 
-                $GLOBALS['TL_DCA'][$strName]['fields']['title']['wizard'][] = [\Verstaerker\I18nl10nBundle\Callback\WizardFieldCallback::class, 'addI18nl10nFields'];
-
-                // Update palettes
-                /*$GLOBALS['TL_DCA'][$strName]['palettes']['default'] .= ';{i18nl10n_legend},i18nl10n_lang,i18nl10n_id';
-                $GLOBALS['TL_LANG'][$strName]['i18nl10n_legend'] = $GLOBALS['TL_LANG']['MSC']['i18nl10n_legend'];
-
-                $GLOBALS['TL_DCA'][$strName]['fields']['i18nl10n_lang'] = [
-                    'label' => &$GLOBALS['TL_LANG']['MSC']['i18nl10n_fields']['language']['label'],
-                    'exclude' => true,
-                    'filter' => true,
-                    'inputType' => 'select',
-                    'sorting' => true,
-                    'flag' => 11,
-                    'options_callback' => function () {
-                        $l = [];
-                        foreach (I18nl10n::getInstance()->getAvailableLanguages(true, true) as $lang) {
-                            $l[$lang] = $GLOBALS['TL_LANG']['LNG'][$lang];
-                        }
-
-                        return $l;
-                    },
-                    'reference' => &$GLOBALS['TL_LANG']['LNG'],
-                    'eval' => [
-                        'mandatory' => true,
-                        //'rgxp'               => 'language',
-                        'maxlength' => 5,
-                        'nospace' => true,
-                        'doNotCopy' => true,
-                        'tl_class' => 'w50 clr',
-                        'includeBlankOption' => true,
-                    ],
-                    'sql' => "varchar(5) NOT NULL default ''",
-                ];
-                $GLOBALS['TL_DCA'][$strName]['fields']['i18nl10n_id'] = [
-                    'label' => &$GLOBALS['TL_LANG']['MSC']['i18nl10n_id']['language']['label'],
-                    'exclude' => true,
-                    'inputType' => 'i18nl10nAssociatedLocationsWizard',
-                    'eval' => ['tl_class' => 'w50', 'submitOnChange' => true],
-                    'sql' => 'blob NULL',
-                ];*/
+        foreach ($GLOBALS['TL_DCA'][$strName]['fields'] as $f => $fc) {
+            if ($objI18nl10n->isI18nl10nField($f, $strName)) {
+                $GLOBALS['TL_DCA'][$strName]['fields'][$f]['eval']['tl_class'] .= ' wizard';
+                $GLOBALS['TL_DCA'][$strName]['fields'][$f]['wizard'][] = [\Verstaerker\I18nl10nBundle\Callback\WizardFieldCallback::class, 'addI18nl10nFields'];
             }
         }
     }
@@ -70,7 +46,7 @@ class LoadDataContainerHook
     /**
      * @param $strName
      */
-    public function setLanguages($strName)
+    public function setLanguages($strName): void
     {
         // Some modules are not able to support user permission base languages, so get all
         $arrLanguages = I18nl10n::getInstance()->getAvailableLanguages(false, true);
@@ -89,10 +65,10 @@ class LoadDataContainerHook
      *
      * @param string $strName
      */
-    public function appendLanguageSelectCallback($strName)
+    public function appendLanguageSelectCallback($strName): void
     {
         if ('tl_content' === $strName &&
-            !in_array(\Input::get('do'), I18nl10n::getInstance()->getUnsupportedModules())
+            !\in_array(\Input::get('do'), I18nl10n::getInstance()->getUnsupportedModules(), true)
         ) {
             $GLOBALS['TL_DCA']['tl_content']['config']['onload_callback'][] =
                 ['tl_content_l10n', 'appendLanguageInput'];
@@ -107,7 +83,7 @@ class LoadDataContainerHook
      *
      * @param string $strName
      */
-    public function appendButtonCallback($strName)
+    public function appendButtonCallback($strName): void
     {
         // Append tl_content callbacks
         if ('tl_content' === $strName && 'article' === \Input::get('do')) {
@@ -130,12 +106,70 @@ class LoadDataContainerHook
     }
 
     /**
+     * List label callback for loadDataContainer hook.
+     *
+     * Appending label callback for tl_article while keeping original callback
+     *
+     * @param $strName
+     */
+    public function appendLabelCallback($strName): void
+    {
+        // Append tl_content callbacks
+        if ('tl_article' === $strName && 'article' === \Input::get('do')) {
+            $arrVendorCallback = $GLOBALS['TL_DCA']['tl_article']['list']['label']['label_callback'];
+            $objCallback = new \tl_article_l10n();
+
+            // Create an anonymous function to handle callback from different DCAs
+            $GLOBALS['TL_DCA']['tl_article']['list']['label']['label_callback'] =
+                function () use ($objCallback, $arrVendorCallback) {
+                    // Get callback arguments
+                    $arrArgs = \func_get_args();
+
+                    return \call_user_func_array(
+                        [$objCallback, 'labelCallback'],
+                        [$arrArgs, $arrVendorCallback]
+                    );
+                };
+        }
+    }
+
+    /**
+     * Child record callback for loadDataContainer hook.
+     *
+     * Appending child record callback for tl_content while keeping original callback
+     *
+     * @param $strName
+     */
+    public function appendChildRecordCallback($strName): void
+    {
+        // Append tl_content callbacks
+        if ('tl_content' === $strName &&
+            !\in_array(\Input::get('do'), I18nl10n::getInstance()->getUnsupportedModules(), true)
+        ) {
+            $arrVendorCallback = $GLOBALS['TL_DCA']['tl_content']['list']['sorting']['child_record_callback'];
+            $objCallback = new \tl_content_l10n();
+
+            // Create an anonymous function to handle callback from different DCAs
+            $GLOBALS['TL_DCA']['tl_content']['list']['sorting']['child_record_callback'] =
+                function () use ($objCallback, $arrVendorCallback) {
+                    // Get callback arguments
+                    $arrArgs = \func_get_args();
+
+                    return \call_user_func_array(
+                        [$objCallback, 'childRecordCallback'],
+                        [$arrArgs, $arrVendorCallback]
+                    );
+                };
+        }
+    }
+
+    /**
      * Set button callback for given table and operation.
      *
      * @param $strTable
      * @param $strOperation
      */
-    private function setButtonCallback($strTable, $strOperation)
+    private function setButtonCallback($strTable, $strOperation): void
     {
         $arrVendorCallback = $GLOBALS['TL_DCA'][$strTable]['list']['operations'][$strOperation]['button_callback'];
 
@@ -156,70 +190,12 @@ class LoadDataContainerHook
         $GLOBALS['TL_DCA'][$strTable]['list']['operations'][$strOperation]['button_callback'] =
             function () use ($strTable, $objCallback, $strOperation, $arrVendorCallback) {
                 // Get callback arguments
-                $arrArgs = func_get_args();
+                $arrArgs = \func_get_args();
 
-                return call_user_func_array(
+                return \call_user_func_array(
                     [$objCallback, 'createButton'],
                     [$strOperation, $arrArgs, $arrVendorCallback]
                 );
             };
-    }
-
-    /**
-     * List label callback for loadDataContainer hook.
-     *
-     * Appending label callback for tl_article while keeping original callback
-     *
-     * @param $strName
-     */
-    public function appendLabelCallback($strName)
-    {
-        // Append tl_content callbacks
-        if ('tl_article' === $strName && 'article' === \Input::get('do')) {
-            $arrVendorCallback = $GLOBALS['TL_DCA']['tl_article']['list']['label']['label_callback'];
-            $objCallback = new \tl_article_l10n();
-
-            // Create an anonymous function to handle callback from different DCAs
-            $GLOBALS['TL_DCA']['tl_article']['list']['label']['label_callback'] =
-                function () use ($objCallback, $arrVendorCallback) {
-                    // Get callback arguments
-                    $arrArgs = func_get_args();
-
-                    return call_user_func_array(
-                        [$objCallback, 'labelCallback'],
-                        [$arrArgs, $arrVendorCallback]
-                    );
-                };
-        }
-    }
-
-    /**
-     * Child record callback for loadDataContainer hook.
-     *
-     * Appending child record callback for tl_content while keeping original callback
-     *
-     * @param $strName
-     */
-    public function appendChildRecordCallback($strName)
-    {
-        // Append tl_content callbacks
-        if ('tl_content' === $strName &&
-            !in_array(\Input::get('do'), I18nl10n::getInstance()->getUnsupportedModules())
-        ) {
-            $arrVendorCallback = $GLOBALS['TL_DCA']['tl_content']['list']['sorting']['child_record_callback'];
-            $objCallback = new \tl_content_l10n();
-
-            // Create an anonymous function to handle callback from different DCAs
-            $GLOBALS['TL_DCA']['tl_content']['list']['sorting']['child_record_callback'] =
-                function () use ($objCallback, $arrVendorCallback) {
-                    // Get callback arguments
-                    $arrArgs = func_get_args();
-
-                    return call_user_func_array(
-                        [$objCallback, 'childRecordCallback'],
-                        [$arrArgs, $arrVendorCallback]
-                    );
-                };
-        }
     }
 }
