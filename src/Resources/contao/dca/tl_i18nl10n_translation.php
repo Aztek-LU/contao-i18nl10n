@@ -100,6 +100,12 @@ $GLOBALS['TL_DCA']['tl_i18nl10n_translation'] = [
             'eval' => ['tl_class' => 'clr'],
             'sql' => 'mediumblob NULL',
         ],
+        'invisible' => [
+            'exclude' => true,
+            'filter' => true,
+            'inputType' => 'checkbox',
+            'sql' => "char(1) NOT NULL default ''",
+        ],
     ],
 ];
 
