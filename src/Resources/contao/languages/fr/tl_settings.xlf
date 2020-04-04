@@ -1,0 +1,19 @@
+<?xml version="1.0" ?><xliff version="1.1">
+  <file datatype="php" original="src/Resources/contao/languages/en/tl_settings.php" source-language="en" target-language="fr">
+    <body>
+      <trans-unit id="tl_settings.i18nl10n_fields.0">
+        <source>Multilingual fields</source>
+        <target>Champs multilingues</target>
+      </trans-unit>
+      <trans-unit id="tl_settings.i18nl10n_fields.1">
+        <source>Here you can select the fields we can translate.</source>
+        <target>Sélectionner les champs traductibles.</target>
+      </trans-unit>
+
+      <trans-unit id="tl_settings.i18nl10n_legend">
+        <source>Multilingual settings</source>
+        <target>Paramètres multilingues</target>
+      </trans-unit>	
+    </body>
+  </file>
+</xliff>
