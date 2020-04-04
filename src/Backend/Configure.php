@@ -1,14 +1,20 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * i18nl10n Contao Module.
+ * i18nl10n Contao Module
  *
  * The i18nl10n module for Contao allows you to manage multilingual content
  * on the element level rather than with page trees.
  *
- *
- * @copyright   Copyright (c) 2014-2015 Verstärker, Patric Eberle
+ * @copyright   Copyright (c) 2014-2020 Verstärker, Patric Eberle
  * @author      Patric Eberle <line-in@derverstaerker.ch>
- * @license     LGPLv3 http://www.gnu.org/licenses/lgpl-3.0.html
+ * @author      Claudio De Facci <claudio@exploreimpact.de>
+ * @author      Web ex Machina <contact@webexmachina.fr>
+ * @category    ContaoBundle
+ * @package     exploreimpact/contao-i18nl10n
+ * @link        https://github.com/exploreimpact/contao-i18nl10n
  */
 
 namespace Verstaerker\I18nl10nBundle\Backend;
@@ -30,10 +36,9 @@ class Configure extends \BackendModule
     /**
      * Generate the module.
      *
-     *
      * @throws Exception
      */
-    protected function compile()
+    protected function compile(): void
     {
         // Load all tables
         $arrTables = [];
@@ -45,11 +50,11 @@ class Configure extends \BackendModule
         }
 
         // If we updated the i18nl10n tables
-        if ('tl_i18nl10n_configure' == \Input::post('FORM_SUBMIT')) {
+        if ('tl_i18nl10n_configure' === \Input::post('FORM_SUBMIT')) {
             // Remove from config every table not sent but in config array
-            if (in_array($t, $arrI18nl10nTables)) {
+            if (\in_array($t, $arrI18nl10nTables, true)) {
                 foreach ($arrI18nl10nTables as $k => $t) {
-                    if (!in_array($t, \Input::post('i18nl10n_tables'))) {
+                    if (!\in_array($t, \Input::post('i18nl10n_tables'), true)) {
                         unset($arrI18nl10nTables[$k]);
                     }
                 }
@@ -57,7 +62,7 @@ class Configure extends \BackendModule
 
             // Add into config every table sent but not in config array
             foreach (\Input::post('i18nl10n_tables') as $t) {
-                if (!in_array($t, $arrI18nl10nTables)) {
+                if (!\in_array($t, $arrI18nl10nTables, true)) {
                     $arrI18nl10nTables[] = $t;
                 }
             }
@@ -72,7 +77,7 @@ class Configure extends \BackendModule
                 'label' => $t,
             ];
 
-            if (in_array($t, $arrI18nl10nTables)) {
+            if (\in_array($t, $arrI18nl10nTables, true)) {
                 $o['selected'] = true;
             }
 
