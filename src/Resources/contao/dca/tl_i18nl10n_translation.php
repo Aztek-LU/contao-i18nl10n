@@ -51,9 +51,6 @@ $GLOBALS['TL_DCA']['tl_i18nl10n_translation'] = [
         'field' => [
             'sql' => "varchar(255) NOT NULL default ''",
         ],
-        'sorting' => [
-            'sql' => 'int(10) unsigned NOT NULL default 0',
-        ],
         'tstamp' => [
             'sql' => 'int(10) unsigned NOT NULL default 0',
         ],
