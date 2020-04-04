@@ -26,13 +26,6 @@ use Contao\Controller;
 class I18nl10n extends Controller
 {
     /**
-     * Known and unsupported Contao modules
-     *
-     * @var array
-     */
-    protected $unsupportedModules = array('news', 'calendar');
-
-    /**
      * Class instance
      *
      * @var I18nl10n
@@ -121,16 +114,6 @@ class I18nl10n extends Controller
         }
 
         return static::$instance;
-    }
-
-    /**
-     * Get unsupported Contao modules
-     *
-     * @return array
-     */
-    public function getUnsupportedModules()
-    {
-        return $this->unsupportedModules;
     }
 
     /**
