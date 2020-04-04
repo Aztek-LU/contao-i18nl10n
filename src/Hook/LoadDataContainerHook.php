@@ -21,8 +21,12 @@ class LoadDataContainerHook
             $arrI18nl10nTables = deserialize(\Config::get('i18nl10n_tables'));
             if (!empty($arrI18nl10nTables) && in_array($strName, $arrI18nl10nTables)) {
                 \System::loadLanguageFile('languages');
+
+                $GLOBALS['TL_DCA'][$strName]['fields']['title']['eval']['tl_class'] .= ' wizard'; 
+                $GLOBALS['TL_DCA'][$strName]['fields']['title']['wizard'][] = [\Verstaerker\I18nl10nBundle\Callback\WizardFieldCallback::class, 'addI18nl10nFields'];
+
                 // Update palettes
-                $GLOBALS['TL_DCA'][$strName]['palettes']['default'] .= ';{i18nl10n_legend},i18nl10n_lang,i18nl10n_id';
+                /*$GLOBALS['TL_DCA'][$strName]['palettes']['default'] .= ';{i18nl10n_legend},i18nl10n_lang,i18nl10n_id';
                 $GLOBALS['TL_LANG'][$strName]['i18nl10n_legend'] = $GLOBALS['TL_LANG']['MSC']['i18nl10n_legend'];
 
                 $GLOBALS['TL_DCA'][$strName]['fields']['i18nl10n_lang'] = [
@@ -58,7 +62,7 @@ class LoadDataContainerHook
                     'inputType' => 'i18nl10nAssociatedLocationsWizard',
                     'eval' => ['tl_class' => 'w50', 'submitOnChange' => true],
                     'sql' => 'blob NULL',
-                ];
+                ];*/
             }
         }
     }

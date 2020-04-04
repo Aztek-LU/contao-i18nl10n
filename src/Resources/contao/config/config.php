@@ -30,7 +30,7 @@ if (TL_MODE === 'BE') {
 }
 
 // Append be module to sidebar
-array_insert(
+/*array_insert(
     $GLOBALS['BE_MOD']['design'],
     array_search('page', array_keys($GLOBALS['BE_MOD']['design']), true) + 1,
     [
@@ -39,7 +39,7 @@ array_insert(
             'icon' => 'bundles/verstaerkeri18nl10n/img/i18nl10n.png',
         ],
     ]
-);
+);*/
 
 array_insert(
     $GLOBALS['BE_MOD']['system'],
@@ -64,6 +64,7 @@ $GLOBALS['TL_MODELS'][\Verstaerker\I18nl10nBundle\Model\I18nl10nTranslation::get
 /*
  * HOOKS
  */
+$GLOBALS['TL_HOOKS']['loadDataContainer'][] = ['Verstaerker\I18nl10nBundle\Hook\LoadDataContainerHook', 'addColumns'];
 /*$GLOBALS['TL_HOOKS']['initializeSystem'][] = ['Verstaerker\I18nl10nBundle\Hook\InitializeSystemHook', 'initializeSystem'];
 $GLOBALS['TL_HOOKS']['generateFrontendUrl'][] = ['Verstaerker\I18nl10nBundle\Hook\GenerateFrontendUrlHook', 'generateFrontendUrl'];
 $GLOBALS['TL_HOOKS']['getPageIdFromUrl'][] = ['Verstaerker\I18nl10nBundle\Hook\GetPageIdFromUrlHook', 'getPageIdFromUrl'];
@@ -71,7 +72,6 @@ $GLOBALS['TL_HOOKS']['generateBreadcrumb'][] = ['Verstaerker\I18nl10nBundle\Hook
 $GLOBALS['TL_HOOKS']['executePostActions'][] = ['Verstaerker\I18nl10nBundle\Hook\ExecutePostActionsHook', 'executePostActions'];
 $GLOBALS['TL_HOOKS']['isVisibleElement'][] = ['Verstaerker\I18nl10nBundle\Hook\IsVisibleElementHook', 'isVisibleElement'];
 $GLOBALS['TL_HOOKS']['replaceInsertTags'][] = ['Verstaerker\I18nl10nBundle\Hook\ReplaceInsertTagsHook', 'replaceInsertTags'];
-$GLOBALS['TL_HOOKS']['loadDataContainer'][] = ['Verstaerker\I18nl10nBundle\Hook\LoadDataContainerHook', 'addColumns'];
 $GLOBALS['TL_HOOKS']['loadDataContainer'][] = ['Verstaerker\I18nl10nBundle\Hook\LoadDataContainerHook', 'setLanguages'];
 $GLOBALS['TL_HOOKS']['getArticle'][] = ['Verstaerker\I18nl10nBundle\Hook\GetArticleHook', 'checkIfEmpty'];
 
