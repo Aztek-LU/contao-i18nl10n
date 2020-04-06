@@ -47,6 +47,26 @@ class LoadDataContainerHook
     }
 
     /**
+     * Add dynamic ptable to tl_i18nl10n table.
+     *
+     * @param [type] $strName [description]
+     */
+    public function addDynamicPtable($strName): void
+    {
+        if ('tl_i18nl10n_translation' === $strName) {
+            if (\Input::get('table')) {
+                $GLOBALS['TL_DCA'][$strName]['config']['ptable'] = \Input::get('table');
+            } else {
+                foreach ($GLOBALS['BE_MOD'] as $arrGroup) {
+                    if (\array_key_exists(\Input::get('do'), $arrGroup)) {
+                        $GLOBALS['TL_DCA'][$strName]['config']['ptable'] = $arrGroup[\Input::get('do')]['tables'][0];
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * @param $strName
      */
     public function setLanguages($strName): void

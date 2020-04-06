@@ -64,8 +64,9 @@ $GLOBALS['TL_MODELS'][\Verstaerker\I18nl10nBundle\Model\I18nl10nTranslation::get
 /*
  * HOOKS
  */
-$GLOBALS['TL_HOOKS']['loadDataContainer'][] = ['Verstaerker\I18nl10nBundle\Hook\LoadDataContainerHook', 'addColumns'];
 $GLOBALS['TL_HOOKS']['initializeSystem'][] = ['Verstaerker\I18nl10nBundle\Hook\InitializeSystemHook', 'authorizeI18nl10nTables'];
+$GLOBALS['TL_HOOKS']['loadDataContainer'][] = ['Verstaerker\I18nl10nBundle\Hook\LoadDataContainerHook', 'addColumns'];
+$GLOBALS['TL_HOOKS']['loadDataContainer'][] = ['Verstaerker\I18nl10nBundle\Hook\LoadDataContainerHook', 'addDynamicPtable'];
 /*$GLOBALS['TL_HOOKS']['initializeSystem'][] = ['Verstaerker\I18nl10nBundle\Hook\InitializeSystemHook', 'initializeSystem'];
 $GLOBALS['TL_HOOKS']['generateFrontendUrl'][] = ['Verstaerker\I18nl10nBundle\Hook\GenerateFrontendUrlHook', 'generateFrontendUrl'];
 $GLOBALS['TL_HOOKS']['getPageIdFromUrl'][] = ['Verstaerker\I18nl10nBundle\Hook\GetPageIdFromUrlHook', 'getPageIdFromUrl'];
