@@ -39,3 +39,8 @@ $GLOBALS['TL_LANG']['MSC']['i18nl10n_id']['language']['label'] = array
     'Traductions',
     'Sélectionnez les traductions de cet élément.'
 );
+
+/**
+ * I18NL10N Labels
+ */
+$GLOBALS['TL_LANG']['MSC']['i18nl10n_nbTranslations'] = '<span style="vertical-align:middle;">(%s/%s trad.)</span>';
