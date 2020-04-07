@@ -17,7 +17,9 @@ declare(strict_types=1);
  * @link        https://github.com/exploreimpact/contao-i18nl10n
  */
 
+use Verstaerker\I18nl10nBundle\Classes\I18nl10n;
 use Verstaerker\I18nl10nBundle\Model\I18nl10nTranslation;
+$this->loadLanguageFile('languages');
 
 $GLOBALS['TL_DCA']['tl_i18nl10n_translation'] = [
     // Config
@@ -35,6 +37,63 @@ $GLOBALS['TL_DCA']['tl_i18nl10n_translation'] = [
                 'pid,ptable,field,language' => 'index',
             ],
         ],
+    ],
+
+    // List
+    'list' => array
+    (
+        'sorting' => array
+        (
+            'mode'                    => 1,
+            'fields'                  => array('language'),
+            'flag'                    => 1,
+            'panelLayout'             => 'filter;search'
+        ),
+        'label' => array
+        (
+            'fields'                  => array('language', 'valueText'),
+            'format'                  => '%s <span style="color:#999;padding-left:3px">[%s]</span>',
+            //'label_callback'          => array('tl_article', 'addIcon')
+        ),
+        'global_operations' => array
+        (
+            'all' => array
+            (
+                'href'                => 'act=select',
+                'class'               => 'header_edit_all',
+                'attributes'          => 'onclick="Backend.getScrollOffset()" accesskey="e"'
+            )
+        ),
+        'operations' => array
+        (
+            'edit' => array
+            (
+                'href'                => 'act=edit',
+                'icon'                => 'edit.svg'
+            ),
+            'copy' => array
+            (
+                'href'                => 'act=paste&amp;mode=copy',
+                'icon'                => 'copy.svg',
+                'attributes'          => 'onclick="Backend.getScrollOffset()"'
+            ),
+            'delete' => array
+            (
+                'href'                => 'act=delete',
+                'icon'                => 'delete.svg',
+                'attributes'          => 'onclick="if(!confirm(\'' . $GLOBALS['TL_LANG']['MSC']['deleteConfirm'] . '\'))return false;Backend.getScrollOffset()"'
+            ),
+            'show' => array
+            (
+                'href'                => 'act=show',
+                'icon'                => 'show.svg'
+            )
+        )
+    ),
+
+    // Palettes
+    'palettes' => [
+        'default' => '{title_legend},language,valueText',
     ],
 
     // Fields
@@ -68,7 +127,6 @@ $GLOBALS['TL_DCA']['tl_i18nl10n_translation'] = [
                 'maxlength' => 20,
                 'nospace' => true,
                 'doNotCopy' => true,
-                'tl_class' => 'w50 clr',
                 'includeBlankOption' => true,
             ],
             'sql' => "varchar(20) NOT NULL default ''",
@@ -91,13 +149,12 @@ $GLOBALS['TL_DCA']['tl_i18nl10n_translation'] = [
         'valueBinary' => [
             'exclude' => true,
             'inputType' => 'fileTree',
-            'eval' => ['filesOnly' => true, 'fieldType' => 'radio', 'tl_class' => 'clr'],
+            'eval' => ['filesOnly' => true, 'fieldType' => 'radio'],
             'sql' => 'binary(16) NULL',
         ],
         'valueBlob' => [
             'exclude' => true,
             'inputType' => 'listWizard',
-            'eval' => ['tl_class' => 'clr'],
             'sql' => 'mediumblob NULL',
         ],
         'invisible' => [
@@ -121,6 +178,38 @@ class tl_i18nl10n_translation extends Contao\Backend
     {
         parent::__construct();
         $this->import('Contao\BackendUser', 'User');
+    }
+
+    public function getField($varValue, $dc)
+    {
+        if (\Input::get('field')) {
+            $varValue = \Input::get('field');
+        }
+
+        return $varValue;
+    }
+
+    public function saveField($varValue, $dc)
+    {       
+        return $varValue;
+    }
+
+    /**
+     * Create language options based on root page and already used languages.
+     *
+     * @return array
+     */
+    public function languageOptions(DataContainer $dc)
+    {
+        $arrOptions = [];
+        $i18nl10nLanguages = I18nl10n::getInstance()->getAvailableLanguages(false, true);
+
+        // Create options array base on root page languages
+        foreach ($i18nl10nLanguages as $language) {
+            $arrOptions[$language] = $GLOBALS['TL_LANG']['LNG'][$language];
+        }
+
+        return $arrOptions;
     }
 
     /**

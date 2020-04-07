@@ -54,7 +54,7 @@ class LoadDataContainerHook
     public function addDynamicPtable($strName): void
     {
         if ('tl_i18nl10n_translation' === $strName) {
-            if (\Input::get('table')) {
+            if (\Input::get('table') && \Input::get('table') != $strName) {
                 $GLOBALS['TL_DCA'][$strName]['config']['ptable'] = \Input::get('table');
             } else {
                 foreach ($GLOBALS['BE_MOD'] as $arrGroup) {

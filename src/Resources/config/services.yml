@@ -1,0 +1,9 @@
+services:
+    Verstaerker\I18nl10nBundle\Controller\I18nl10nTranslatorController:
+        arguments:
+            - '@contao.framework'
+            - '@database_connection'
+            - '@request_stack'
+            - '@translator'
+            - '%kernel.project_dir%'
+        public: true

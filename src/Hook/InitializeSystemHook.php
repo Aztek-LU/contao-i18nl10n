@@ -56,6 +56,7 @@ class InitializeSystemHook extends System
                     foreach ($arrModule['tables'] as $strTable) {
                         if (\in_array($strTable, $arrI18nl10nTables, true)) {
                             $arrModule['tables'][] = 'tl_i18nl10n_translation';
+                            $arrModule['i18nl10nTranslatorWizardAction'] = ['Verstaerker\I18nl10nBundle\Controller\I18nl10nTranslatorController', 'i18nl10nTranslatorWizardAction'];
                         }
                     }
                 }
