@@ -44,3 +44,4 @@ $GLOBALS['TL_LANG']['MSC']['i18nl10n_id']['language']['label'] = array
  * I18NL10N Labels
  */
 $GLOBALS['TL_LANG']['MSC']['i18nl10n_nbTranslations'] = '<span style="vertical-align:middle;">(%s/%s trad.)</span>';
+$GLOBALS['TL_LANG']['MSC']['i18nl10n_wizardTitle'] = 'Traductions pour le champ %s (ID %s)';

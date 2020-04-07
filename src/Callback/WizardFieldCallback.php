@@ -33,7 +33,7 @@ class WizardFieldCallback
      */
     public function addI18nl10nFields($dc)
     {
-        $title = sprintf('Translations for %s (ID %s)', $dc->field, $dc->id);
+        $title = sprintf($GLOBALS['TL_LANG']['MSC']['i18nl10n_wizardTitle'], $dc->field, $dc->id);
 
         return ' <a href="contao/main.php?do='.\Input::get('do').'&amp;key=i18nl10nTranslatorWizardAction&amp;id='.$dc->id.'&amp;field='.$dc->field.'&amp;popup=1&amp;rt='.REQUEST_TOKEN.'" title="'.\Contao\StringUtil::specialchars($title).'" onclick="Backend.openModalIframe({\'title\':\''.\Contao\StringUtil::specialchars(str_replace("'", "\\'", $title)).'\',\'url\':this.href});return false">'.\Contao\Image::getHtml('bundles/verstaerkeri18nl10n/img/i18nl10n.png', $title).'</a>';
     }
