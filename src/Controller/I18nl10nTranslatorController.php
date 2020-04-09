@@ -71,7 +71,12 @@ class I18nl10nTranslatorController
     private $widgets;
 
     /**
-     * @internal Do not inherit from this class; decorate the "Contao\CoreBundle\Controller\BackendCsvImportController" service instead
+     * @var array
+     */
+    private $models;
+
+    /**
+     * @internal Do not inherit from this class; decorate the "Verstaerker\I18nl10nBundle\Controller\I18nl10nTranslatorController" service instead
      */
     public function __construct(ContaoFramework $framework, Connection $connection, RequestStack $requestStack, TranslatorInterface $translator, string $projectDir)
     {
@@ -83,6 +88,7 @@ class I18nl10nTranslatorController
 
         $this->languages = I18nl10n::getInstance()->getAvailableLanguages(false, true);
         $this->widgets = [];
+        $this->models = [];
     }
 
     public function i18nl10nTranslatorWizardAction(DataContainer $dc): Response
@@ -108,30 +114,32 @@ class I18nl10nTranslatorController
 
         $this->framework->initialize();
 
-        // Load available languages
+        // Get the model & widget of each language
         foreach ($this->languages as $l) {
             // Get the value for this field
             $objTranslation = I18nl10nTranslation::findItems(['pid' => $id, 'ptable' => $table, 'field' => $field, 'language' => $l], 1);
-
-            if (false !== strpos('blob', $config['sql'])) {
-                $value = $objTranslation->valueBlob ?: '';
-            } elseif (false !== strpos('binary', $config['sql'])) {
-                $value = $objTranslation->valueBinary ?: '';
-            } elseif (false !== strpos('text', $config['sql'])) {
-                $value = $objTranslation->valueTextarea ?: '';
-            } else {
-                $value = $objTranslation->valueText ?: '';
-            }
+            $value = $objTranslation->{$this->getValueField($config)};
 
             $strClass = '\\'.$GLOBALS['BE_FFL'][$config['inputType']];
             $objWidget = new $strClass($strClass::getAttributesFromDca($config, sprintf('i18nl10n_%s_%s_%s_%s', $table, $field, $id, $l), $value, $field, $table, null));
             $this->widgets[$l] = $objWidget;
+            $this->models[$l] = $objTranslation;
         }
-
-        $template = $this->prepareTemplate($request);
 
         if ($request->request->get('FORM_SUBMIT') === $this->getFormId($request)) {
             try {
+                foreach ($this->languages as $l) {
+                    $value = $request->request->get(sprintf('i18nl10n_%s_%s_%s_%s', $table, $field, $id, $l));
+
+                    // If the value sent is different, save the model and update the widget
+                    if ($value !== $this->models[$l]->{$this->getValueField($config)}) {
+                        $this->models[$l]->{$this->getValueField($config)} = $value;
+                        $this->models[$l]->tstamp = time();
+                        $this->models[$l]->save();
+
+                        $this->widgets[$l]->value = $value;
+                    }
+                }
             } catch (\RuntimeException $e) {
                 /** @var Message $message */
                 $message = $this->framework->getAdapter(Message::class);
@@ -139,15 +147,9 @@ class I18nl10nTranslatorController
 
                 return new RedirectResponse($request->getUri(), 303);
             }
-
-            /*$this->connection->update(
-                $table,
-                [$field => serialize($data)],
-                ['id' => $id]
-            );*/
-
-            return new RedirectResponse($this->getBackUrl($request));
         }
+
+        $template = $this->prepareTemplate($request);
 
         return new Response($template->parse());
     }
@@ -163,6 +165,21 @@ class I18nl10nTranslatorController
         $template->submitLabel = $this->translator->trans('MSC.apply', [], 'contao_default');
 
         return $template;
+    }
+
+    private function getValueField(array $config)
+    {
+        if (false !== strpos('blob', $config['sql'])) {
+            return 'valueBlob';
+        }
+        if (false !== strpos('binary', $config['sql'])) {
+            return 'valueBinary';
+        }
+        if (false !== strpos('text', $config['sql'])) {
+            return 'valueTextarea';
+        }
+
+        return 'valueText';
     }
 
     private function getBackUrl(Request $request): string
