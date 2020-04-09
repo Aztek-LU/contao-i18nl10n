@@ -94,7 +94,7 @@ class I18nl10nTranslatorController
     public function i18nl10nTranslatorWizardAction(DataContainer $dc): Response
     {
         return $this->importFromTemplate(
-            $dc->table,
+            \Input::get('table') ?: $dc->table,
             \Input::get('field'),
             (int) $dc->id,
             $GLOBALS['TL_DCA'][$dc->table]['fields'][\Input::get('field')]

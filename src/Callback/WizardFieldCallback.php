@@ -36,9 +36,11 @@ class WizardFieldCallback
         // Retrieve the number of translations
         $intTranslations = I18nl10nTranslation::countItems(['pid' => $dc->id, 'ptable' => $dc->table, 'field' => $dc->field]);
         $arrLanguages = I18nl10n::getInstance()->getAvailableLanguages(false, true);
+        $table = \Input::get('table') ?: $dc->table;
 
         $strXlabel = sprintf($GLOBALS['TL_LANG']['MSC']['i18nl10n_nbTranslations'], $intTranslations, \count($arrLanguages));
-        $strXlabel .= ' <a href="contao/main.php?do='.\Input::get('do').'&amp;key=i18nl10nTranslatorWizardAction&amp;id='.$dc->id.'&amp;field='.$dc->field.'&amp;popup=1&amp;rt='.REQUEST_TOKEN.'" title="'.\Contao\StringUtil::specialchars($title).'" onclick="Backend.openModalIframe({\'title\':\''.\Contao\StringUtil::specialchars(str_replace("'", "\\'", $title)).'\',\'url\':this.href});return false">'.\Contao\Image::getHtml('bundles/verstaerkeri18nl10n/img/i18nl10n.png', $title).'</a>';
+        $strXlabel .= ' <a href="contao/main.php?do='.\Input::get('do').'&amp;key=i18nl10nTranslatorWizardAction&amp;table='.$table.'&amp;id='.$dc->id.'&amp;field='.$dc->field.'&amp;popup=1&amp;rt='.REQUEST_TOKEN.'" title="'.\Contao\StringUtil::specialchars($title).'" onclick="Backend.openModalIframe({\'title\':\''.\Contao\StringUtil::specialchars(str_replace("'", "\\'", $title)).'\',\'url\':this.href});return false">'.\Contao\Image::getHtml('bundles/verstaerkeri18nl10n/img/i18nl10n.png', $title).'</a>';
+
         return $strXlabel;
     }
 }
