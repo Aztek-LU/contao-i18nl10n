@@ -20,7 +20,6 @@ declare(strict_types=1);
 namespace Verstaerker\I18nl10nBundle\Controller;
 
 use Contao\BackendTemplate;
-use Contao\Config;
 use Contao\CoreBundle\Exception\InternalServerErrorException;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\DataContainer;
@@ -31,6 +30,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Verstaerker\I18nl10nBundle\Classes\I18nl10n;
+use Verstaerker\I18nl10nBundle\Model\I18nl10nTranslation;
 
 class I18nl10nTranslatorController
 {
@@ -60,6 +61,16 @@ class I18nl10nTranslatorController
     private $projectDir;
 
     /**
+     * @var array
+     */
+    private $languages;
+
+    /**
+     * @var array
+     */
+    private $widgets;
+
+    /**
      * @internal Do not inherit from this class; decorate the "Contao\CoreBundle\Controller\BackendCsvImportController" service instead
      */
     public function __construct(ContaoFramework $framework, Connection $connection, RequestStack $requestStack, TranslatorInterface $translator, string $projectDir)
@@ -69,6 +80,9 @@ class I18nl10nTranslatorController
         $this->requestStack = $requestStack;
         $this->translator = $translator;
         $this->projectDir = $projectDir;
+
+        $this->languages = I18nl10n::getInstance()->getAvailableLanguages(false, true);
+        $this->widgets = [];
     }
 
     public function i18nl10nTranslatorWizardAction(DataContainer $dc): Response
@@ -76,14 +90,15 @@ class I18nl10nTranslatorController
         return $this->importFromTemplate(
             $dc->table,
             \Input::get('field'),
-            (int) $dc->id
+            (int) $dc->id,
+            $GLOBALS['TL_DCA'][$dc->table]['fields'][\Input::get('field')]
         );
     }
 
     /**
      * @throws InternalServerErrorException
      */
-    private function importFromTemplate(string $table, string $field, int $id): Response
+    private function importFromTemplate(string $table, string $field, int $id, array $config): Response
     {
         $request = $this->requestStack->getCurrentRequest();
 
@@ -92,6 +107,27 @@ class I18nl10nTranslatorController
         }
 
         $this->framework->initialize();
+
+        // Load available languages
+        foreach ($this->languages as $l) {
+            // Get the value for this field
+            $objTranslation = I18nl10nTranslation::findItems(['pid' => $id, 'ptable' => $table, 'field' => $field, 'language' => $l], 1);
+
+            if (false !== strpos('blob', $config['sql'])) {
+                $value = $objTranslation->valueBlob ?: '';
+            } elseif (false !== strpos('binary', $config['sql'])) {
+                $value = $objTranslation->valueBinary ?: '';
+            } elseif (false !== strpos('text', $config['sql'])) {
+                $value = $objTranslation->valueTextarea ?: '';
+            } else {
+                $value = $objTranslation->valueText ?: '';
+            }
+
+            $strClass = '\\'.$GLOBALS['BE_FFL'][$config['inputType']];
+            $objWidget = new $strClass($strClass::getAttributesFromDca($config, sprintf('i18nl10n_%s_%s_%s_%s', $table, $field, $id, $l), $value, $field, $table, null));
+            $this->widgets[$l] = $objWidget;
+        }
+
         $template = $this->prepareTemplate($request);
 
         if ($request->request->get('FORM_SUBMIT') === $this->getFormId($request)) {
@@ -120,19 +156,11 @@ class I18nl10nTranslatorController
     {
         $template = new BackendTemplate('be_i18nl10n_translator_wizard');
 
-        /** @var Config $config */
-        $config = $this->framework->getAdapter(Config::class);
-
+        $template->widgets = $this->widgets;
+        $template->languages = $this->languages;
         $template->formId = $this->getFormId($request);
         $template->backUrl = $this->getBackUrl($request);
-        $template->fileMaxSize = $config->get('maxFileSize');
         $template->submitLabel = $this->translator->trans('MSC.apply', [], 'contao_default');
-        $template->backBT = $this->translator->trans('MSC.backBT', [], 'contao_default');
-        $template->backBTTitle = $this->translator->trans('MSC.backBTTitle', [], 'contao_default');
-        $template->separatorLabel = $this->translator->trans('MSC.separator.0', [], 'contao_default');
-        $template->separatorHelp = $this->translator->trans('MSC.separator.1', [], 'contao_default');
-        $template->sourceLabel = $this->translator->trans('MSC.source.0', [], 'contao_default');
-        $template->sourceLabelHelp = $this->translator->trans('MSC.source.1', [], 'contao_default');
 
         return $template;
     }

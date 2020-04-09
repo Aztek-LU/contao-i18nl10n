@@ -98,11 +98,11 @@ class I18nl10nTranslation extends \Contao\Model
         $arrColumns = [];
 
         if ($arrConfig['pid']) {
-            $arrColumns[] = $t.'.pid = '.$arrConfig['pid'];
+            $arrColumns[] = "$t.pid = ".$arrConfig['pid'];
         }
 
         if ($arrConfig['ptable']) {
-            $arrColumns[] = $t.'.ptable = "'.$arrConfig['ptable'].'"';
+            $arrColumns[] = "$t.ptable = '".$arrConfig['ptable']."'";
         }
 
         if ($arrConfig['field']) {
