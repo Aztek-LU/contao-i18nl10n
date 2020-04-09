@@ -118,6 +118,18 @@ class I18nl10nTranslatorController
         foreach ($this->languages as $l) {
             // Get the value for this field
             $objTranslation = I18nl10nTranslation::findItems(['pid' => $id, 'ptable' => $table, 'field' => $field, 'language' => $l], 1);
+
+            // If there is no translation, create it
+            if (!$objTranslation) {
+                $objTranslation = new I18nl10nTranslation();
+                $objTranslation->pid = $id;
+                $objTranslation->ptable = $table;
+                $objTranslation->tstamp = time();
+                $objTranslation->field = $field;
+                $objTranslation->language = $l;
+                $objTranslation->save();
+            }
+
             $value = $objTranslation->{$this->getValueField($config)};
 
             $strClass = '\\'.$GLOBALS['BE_FFL'][$config['inputType']];
