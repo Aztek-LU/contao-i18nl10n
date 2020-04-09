@@ -38,8 +38,6 @@ class LoadDataContainerHook
         if (\is_array($GLOBALS['TL_DCA'][$strName]['fields'])) {
             foreach ($GLOBALS['TL_DCA'][$strName]['fields'] as $f => $fc) {
                 if ($objI18nl10n->isI18nl10nField($f, $strName)) {
-                    $GLOBALS['TL_DCA'][$strName]['fields'][$f]['eval']['tl_class'] .= ' wizard';
-                    $GLOBALS['TL_DCA'][$strName]['fields'][$f]['wizard'][] = [\Verstaerker\I18nl10nBundle\Callback\WizardFieldCallback::class, 'addI18nl10nFields'];
                     $GLOBALS['TL_DCA'][$strName]['fields'][$f]['xlabel'][] = [\Verstaerker\I18nl10nBundle\Callback\WizardFieldCallback::class, 'addI18nl10nLabel'];
                 }
             }
