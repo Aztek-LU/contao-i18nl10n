@@ -181,13 +181,13 @@ class I18nl10nTranslatorController
 
     private function getValueField(array $config)
     {
-        if (false !== strpos('blob', $config['sql'])) {
+        if (false !== strpos($config['sql'], 'blob')) {
             return 'valueBlob';
         }
-        if (false !== strpos('binary', $config['sql'])) {
+        if (false !== strpos($config['sql'], 'binary')) {
             return 'valueBinary';
         }
-        if (false !== strpos('text', $config['sql'])) {
+        if (false !== strpos($config['sql'], 'text')) {
             return 'valueTextarea';
         }
 
