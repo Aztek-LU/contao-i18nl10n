@@ -6,7 +6,7 @@
 			<?php foreach($this->languages as $l): ?>
 			<fieldset id="tl_i18nl10n_translator_<?= $l ?>" class="tl_box">
 				<legend><?= $GLOBALS['TL_LANG']['LNG'][$l] ?></legend>
-				<?= $this->widgets[$l]->parse() ?>
+				<?= $this->widgets[$l] ?>
 			</fieldset>
 			<?php endforeach; ?>
 		</div>

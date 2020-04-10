@@ -38,6 +38,11 @@ class LoadDataContainerHook
         if (\is_array($GLOBALS['TL_DCA'][$strName]['fields'])) {
             foreach ($GLOBALS['TL_DCA'][$strName]['fields'] as $f => $fc) {
                 if ($objI18nl10n->isI18nl10nField($f, $strName)) {
+                    // Bypass some Ajax securities by telling Contao that i18nl10n translations are in this DCA
+                    foreach ($objI18nl10n->getAvailableLanguages(false, true) as $l) {
+                        $GLOBALS['TL_DCA'][$strName]['fields'][sprintf('i18nl10n_%s_%s_%s_%s', $strName, $f, \Input::get('id'), $l)] = $GLOBALS['TL_DCA'][$strName]['fields'][$f];
+                    }
+
                     $GLOBALS['TL_DCA'][$strName]['fields'][$f]['xlabel'][] = [\Verstaerker\I18nl10nBundle\Callback\WizardFieldCallback::class, 'addI18nl10nLabel'];
                 }
             }
@@ -52,7 +57,7 @@ class LoadDataContainerHook
     public function addDynamicPtable($strName): void
     {
         if ('tl_i18nl10n_translation' === $strName) {
-            if (\Input::get('table') && \Input::get('table') != $strName) {
+            if (\Input::get('table') && \Input::get('table') !== $strName) {
                 $GLOBALS['TL_DCA'][$strName]['config']['ptable'] = \Input::get('table');
             } else {
                 foreach ($GLOBALS['BE_MOD'] as $arrGroup) {

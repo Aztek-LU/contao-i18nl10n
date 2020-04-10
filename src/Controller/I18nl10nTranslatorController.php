@@ -66,6 +66,26 @@ class I18nl10nTranslatorController
     private $languages;
 
     /**
+     * @var string
+     */
+    private $table;
+
+    /**
+     * @var string
+     */
+    private $field;
+
+    /**
+     * @var int
+     */
+    private $pid;
+
+    /**
+     * @var array
+     */
+    private $config;
+
+    /**
      * @var array
      */
     private $widgets;
@@ -93,19 +113,11 @@ class I18nl10nTranslatorController
 
     public function i18nl10nTranslatorWizardAction(DataContainer $dc): Response
     {
-        return $this->importFromTemplate(
-            \Input::get('table') ?: $dc->table,
-            \Input::get('field'),
-            (int) $dc->id,
-            $GLOBALS['TL_DCA'][$dc->table]['fields'][\Input::get('field')]
-        );
-    }
+        $this->table = \Input::get('table') ?: $dc->table;
+        $this->field = \Input::get('field');
+        $this->pid = (int) $dc->id;
+        $this->config = $GLOBALS['TL_DCA'][$this->table]['fields'][$this->field];
 
-    /**
-     * @throws InternalServerErrorException
-     */
-    private function importFromTemplate(string $table, string $field, int $id, array $config): Response
-    {
         $request = $this->requestStack->getCurrentRequest();
 
         if (null === $request) {
@@ -117,23 +129,32 @@ class I18nl10nTranslatorController
         // Get the model & widget of each language
         foreach ($this->languages as $l) {
             // Get the value for this field
-            $objTranslation = I18nl10nTranslation::findItems(['pid' => $id, 'ptable' => $table, 'field' => $field, 'language' => $l], 1);
+            $objTranslation = I18nl10nTranslation::findItems(['pid' => $this->pid, 'ptable' => $this->table, 'field' => $this->field, 'language' => $l], 1);
 
             // If there is no translation, create it
             if (!$objTranslation) {
                 $objTranslation = new I18nl10nTranslation();
-                $objTranslation->pid = $id;
-                $objTranslation->ptable = $table;
+                $objTranslation->pid = $this->pid;
+                $objTranslation->ptable = $this->table;
                 $objTranslation->tstamp = time();
-                $objTranslation->field = $field;
+                $objTranslation->field = $this->field;
                 $objTranslation->language = $l;
                 $objTranslation->save();
             }
 
-            $value = $objTranslation->{$this->getValueField($config)};
+            $value = $objTranslation->{$this->getValueField()};
 
-            $strClass = '\\'.$GLOBALS['BE_FFL'][$config['inputType']];
-            $objWidget = new $strClass($strClass::getAttributesFromDca($config, sprintf('i18nl10n_%s_%s_%s_%s', $table, $field, $id, $l), $value, $field, $table, null));
+            $strClass = '\\'.$GLOBALS['BE_FFL'][$this->config['inputType']];
+            $objWidget = new $strClass(
+                $strClass::getAttributesFromDca(
+                    $this->config,
+                    $this->getFieldName($l),
+                    $value,
+                    $this->field,
+                    $this->table,
+                    null
+                )
+            );
             $this->widgets[$l] = $objWidget;
             $this->models[$l] = $objTranslation;
         }
@@ -141,11 +162,11 @@ class I18nl10nTranslatorController
         if ($request->request->get('FORM_SUBMIT') === $this->getFormId($request)) {
             try {
                 foreach ($this->languages as $l) {
-                    $value = $request->request->get(sprintf('i18nl10n_%s_%s_%s_%s', $table, $field, $id, $l));
+                    $value = $request->request->get($this->getFieldName($l));
 
                     // If the value sent is different, save the model and update the widget
-                    if ($value !== $this->models[$l]->{$this->getValueField($config)}) {
-                        $this->models[$l]->{$this->getValueField($config)} = $value;
+                    if ($value !== $this->models[$l]->{$this->getValueField()}) {
+                        $this->models[$l]->{$this->getValueField()} = $value;
                         $this->models[$l]->tstamp = time();
                         $this->models[$l]->save();
 
@@ -159,6 +180,10 @@ class I18nl10nTranslatorController
 
                 return new RedirectResponse($request->getUri(), 303);
             }
+        }
+
+        foreach($this->languages as $l) {
+            $this->widgets[$l] = $this->parse($this->widgets[$l], $l);
         }
 
         $template = $this->prepareTemplate($request);
@@ -179,15 +204,15 @@ class I18nl10nTranslatorController
         return $template;
     }
 
-    private function getValueField(array $config)
+    private function getValueField()
     {
-        if (false !== strpos($config['sql'], 'blob')) {
+        if (false !== strpos($this->config['sql'], 'blob')) {
             return 'valueBlob';
         }
-        if (false !== strpos($config['sql'], 'binary')) {
+        if (false !== strpos($this->config['sql'], 'binary')) {
             return 'valueBinary';
         }
-        if (false !== strpos($config['sql'], 'text')) {
+        if (false !== strpos($this->config['sql'], 'text')) {
             return 'valueTextarea';
         }
 
@@ -202,5 +227,65 @@ class I18nl10nTranslatorController
     private function getFormId(Request $request): string
     {
         return 'tl_i18nl10n_translator_'.$request->query->get('key');
+    }
+
+    private function getFieldName(string $l): string {
+        return sprintf('i18nl10n_%s_%s_%s_%s', $this->table, $this->field, $this->pid, $l);
+    }
+
+    private function parse($objWidget, $l) {
+        // Replace the textarea with an RTE instance
+        if (!empty($this->config['eval']['rte']))
+        {
+            list ($file, $type) = explode('|', $this->config['eval']['rte'], 2);
+
+            $fileBrowserTypes = array();
+            $pickerBuilder = \System::getContainer()->get('contao.picker.builder');
+
+            foreach (array('file' => 'image', 'link' => 'file') as $context => $fileBrowserType)
+            {
+                if ($pickerBuilder->supportsContext($context))
+                {
+                    $fileBrowserTypes[] = $fileBrowserType;
+                }
+            }
+
+            $objTemplate = new \BackendTemplate('be_' . $file);
+            $objTemplate->selector = 'ctrl_' . $this->getFieldName($l);
+            $objTemplate->type = $type;
+            $objTemplate->fileBrowserTypes = $fileBrowserTypes;
+            $objTemplate->source = $this->table . '.' . $this->pid;
+
+            // Deprecated since Contao 4.0, to be removed in Contao 5.0
+            $objTemplate->language = \Backend::getTinyMceLanguage();
+
+            $updateMode = $objTemplate->parse();
+
+            unset($file, $type, $pickerBuilder, $fileBrowserTypes, $fileBrowserType);
+        }
+
+        return '
+<div' . ($this->config['eval']['tl_class'] ? ' class="' . trim($this->config['eval']['tl_class']) . '"' : '') . '>' . $objWidget->parse() . $updateMode . (!$objWidget->hasErrors() ? $this->help($strHelpClass) : '') . '
+</div>';
+    }
+
+    /**
+     * Return the field explanation as HTML string
+     *
+     * @param string $strClass
+     *
+     * @return string
+     */
+    public function help($strClass='')
+    {
+        $return = $GLOBALS['TL_DCA'][$this->table]['fields'][$this->field]['label'][1];
+
+        if ($return == '' || $GLOBALS['TL_DCA'][$this->table]['fields'][$this->field]['inputType'] == 'password' || !\Config::get('showHelp'))
+        {
+            return '';
+        }
+
+        return '
+  <p class="tl_help tl_tip' . $strClass . '">' . $return . '</p>';
     }
 }
