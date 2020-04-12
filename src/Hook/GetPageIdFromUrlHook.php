@@ -38,7 +38,6 @@ class GetPageIdFromUrlHook
             return $arrFragments;
         }
 
-
         /*
          * Extract the language snippet from URL
          */
@@ -47,7 +46,6 @@ class GetPageIdFromUrlHook
 
         // First entry must be language
         $strLanguage = $arrFragments[0];
-
 
         /*
          * Arrange correct i18nl10n alias
@@ -74,7 +72,6 @@ class GetPageIdFromUrlHook
 
         // Insert alias
         \array_unshift($arrMappedFragments, $arrAlias['alias']);
-
 
         /*
          * Add language to URL fragments
@@ -148,17 +145,17 @@ class GetPageIdFromUrlHook
 
         $database = \Database::getInstance();
 
-        // Find alias usages by language from tl_page and tl_page_i18nl10n
-        $sql = "(SELECT pid as pageId, alias, 'tl_page_i18nl10n' as 'source', language
-                 FROM tl_page_i18nl10n
-                 WHERE alias IN(?) AND language = ?)
+        // Find alias usages by language from tl_page and tl_i18nl10n_translation
+        $sql = "(SELECT pid AS pageId, valueText AS alias, 'tl_i18nl10n_translation' AS 'source', language
+                 FROM tl_i18nl10n_translation
+                 WHERE ptable = 'tl_page' AND field = 'alias' AND valueText IN(?) AND language = ?)
                 UNION
-                (SELECT id as pageId, alias, 'tl_page' as 'source', language
+                (SELECT id AS pageId, alias, 'tl_page' AS 'source', language
                  FROM tl_page
                  WHERE alias IN(?))
                 ORDER BY "
             . $database->findInSet('alias', $arrAliasGuess) . ", "
-            . $database->findInSet('source', array('tl_page_i18nl10n', 'tl_page'));
+            . $database->findInSet('source', array('tl_i18nl10n_translation', 'tl_page'));
 
         $objL10nPage = $database
             ->prepare($sql)

@@ -41,19 +41,19 @@ class GenerateFrontendUrlHook
         // Do not look for a translation page if there is an alias given already existing in the language we want
         if ($arrRow['alias']) {
             $objAlias = \Database::getInstance()
-                ->prepare('SELECT alias FROM tl_page_i18nl10n WHERE alias = ? AND language = ?')
+                ->prepare('SELECT valueText AS alias FROM tl_i18nl10n_translation WHERE ptable = "tl_page" AND field = "alias" AND valueText = ? AND language = ?')
                 ->limit(1)
                 ->execute($arrRow['alias'], $language);
         }
 
         // Try to get l10n alias by language and pid
         if ($language !== $arrLanguages['default']) {
-            $database = \Database::getInstance();
-            $arrL10nAlias = $database
-                ->prepare('SELECT alias FROM tl_page_i18nl10n WHERE pid = ? AND language = ?')
+            $arrL10nAlias = \Database::getInstance()
+                ->prepare('SELECT valueText AS alias FROM tl_i18nl10n_translation WHERE ptable = "tl_page" AND field = "alias" AND pid = ? AND language = ?')
                 ->execute($arrRow['id'], $language)
                 ->fetchAssoc();
         }
+
 
         $alias = is_array($arrL10nAlias)
             ? $arrL10nAlias['alias']

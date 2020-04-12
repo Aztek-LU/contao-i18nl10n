@@ -1,22 +1,29 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * i18nl10n Contao Module
  *
  * The i18nl10n module for Contao allows you to manage multilingual content
  * on the element level rather than with page trees.
  *
- * @copyright   Copyright (c) 2014-2015 Verstärker, Patric Eberle
+ * @copyright   Copyright (c) 2014-2020 Verstärker, Patric Eberle
  * @author      Patric Eberle <line-in@derverstaerker.ch>
- * @package     i18nl10n modules
- * @license     LGPLv3 http://www.gnu.org/licenses/lgpl-3.0.html
+ * @author      Claudio De Facci <claudio@exploreimpact.de>
+ * @author      Web ex Machina <contact@webexmachina.fr>
+ * @category    ContaoBundle
+ * @package     exploreimpact/contao-i18nl10n
+ * @link        https://github.com/exploreimpact/contao-i18nl10n
  */
 
 namespace Verstaerker\I18nl10nBundle\Modules;
 
 use Verstaerker\I18nl10nBundle\Classes\I18nl10n;
+use Verstaerker\I18nl10nBundle\Model\I18nl10nTranslation;
 
 /**
- * Class ModuleI18nl10nLanguageSelection
+ * Class ModuleI18nl10nLanguageSelection.
  *
  * Generates a languages menu.
  * The site visitor is able to switch between available languages.
@@ -26,29 +33,29 @@ use Verstaerker\I18nl10nBundle\Classes\I18nl10n;
 class ModuleI18nl10nLanguageSelection extends \Module
 {
     /**
-     * Module wrapper template
+     * Module wrapper template.
      *
      * @var string
      */
     protected $strTemplate = 'mod_i18nl10n_nav';
 
     /**
-     * Return a wildcard in the back end
+     * Return a wildcard in the back end.
      *
      * @return string
      */
     public function generate()
     {
-        if (TL_MODE == 'BE') {
+        if (TL_MODE === 'BE') {
             $objTemplate = new \BackendTemplate('be_wildcard');
 
             $objTemplate->wildcard = '### '
-                . utf8_strtoupper($GLOBALS['TL_LANG']['FMD']['i18nl10n_languageSelection'][0])
-                . ' ###';
-            $objTemplate->title    = $this->headline;
-            $objTemplate->id       = $this->id;
-            $objTemplate->link     = $this->name;
-            $objTemplate->href     = 'contao/main.php?do=themes&amp;table=tl_module&amp;act=edit&amp;id=' . $this->id;
+                .utf8_strtoupper($GLOBALS['TL_LANG']['FMD']['i18nl10n_languageSelection'][0])
+                .' ###';
+            $objTemplate->title = $this->headline;
+            $objTemplate->id = $this->id;
+            $objTemplate->link = $this->name;
+            $objTemplate->href = 'contao/main.php?do=themes&amp;table=tl_module&amp;act=edit&amp;id='.$this->id;
 
             return $objTemplate->parse();
         }
@@ -59,41 +66,25 @@ class ModuleI18nl10nLanguageSelection extends \Module
     }
 
     /**
-     * Generate the module
+     * Generate the module.
      *
      * @hooks ModuleI18nl10nLanguageSelection manipulate translation options
      */
-    protected function compile()
+    protected function compile(): void
     {
         global $objPage;
 
-        $time       = time();
-        $items      = array();
+        $time = time();
+        $items = [];
         $langNative = I18nl10n::getInstance()->getNativeLanguageNames();
-
-        $sqlPublishedCondition = BE_USER_LOGGED_IN
-            ? ''
-            : " AND (start = '' OR start < $time) AND (stop = '' OR stop > $time) AND i18nl10n_published = 1 ";
 
         // Get all possible languages for this page tree
         $arrLanguages = I18nl10n::getInstance()->getLanguagesByRootId($objPage->rootId);
-
-        $sql = "
-            SELECT *
-            FROM tl_page_i18nl10n
-            WHERE
-                pid = ?
-                AND language IN ( '" . implode("', '", $arrLanguages['languages']) . "' )
-               " . $sqlPublishedCondition;
-
-        $arrTranslations = \Database::getInstance()
-            ->prepare($sql)
-            ->execute($objPage->id)
-            ->fetchAllassoc();
+        $arrTranslations = I18nl10nTranslation::findItems(['ptable' => 'tl_page', 'pid' => $objPage->id, 'field' => 'alias'])->fetchAll();
 
         // HOOK: add custom logic
         if (isset($GLOBALS['TL_HOOKS']['i18nl10nLanguageSelection'])
-            && is_array($GLOBALS['TL_HOOKS']['i18nl10nLanguageSelection'])
+            && \is_array($GLOBALS['TL_HOOKS']['i18nl10nLanguageSelection'])
         ) {
             foreach ($GLOBALS['TL_HOOKS']['i18nl10nLanguageSelection'] as $callback) {
                 $this->import($callback[0]);
@@ -105,18 +96,16 @@ class ModuleI18nl10nLanguageSelection extends \Module
             $this->loadLanguageFile('languages');
 
             // Add default language
-            if ($objPage->i18nl10n_published) {
-                array_unshift(
-                    $arrTranslations,
-                    array(
-                        'id'        => $objPage->id,
-                        'language'  => $objPage->rootLanguage,
-                        'title'     => $objPage->title,
-                        'pageTitle' => $objPage->pageTitle,
-                        'alias'     => $objPage->alias
-                    )
-                );
-            }
+            array_unshift(
+                $arrTranslations,
+                [
+                    'id' => $objPage->id,
+                    'language' => $objPage->rootLanguage,
+                    'title' => $objPage->title,
+                    'pageTitle' => $objPage->pageTitle,
+                    'alias' => $objPage->alias,
+                ]
+            );
 
             // keep the order in $i18nl10nLanguages and assign to $items
             // only if page translation is found in database
@@ -128,22 +117,26 @@ class ModuleI18nl10nLanguageSelection extends \Module
 
                 // loop translations
                 foreach ($arrTranslations as $row) {
-                    // Prepare the translation item
-                    $item = array(
-                        'id'               => empty($row['pid']) ? $objPage->id : $row['pid'],
-                        'alias'            => empty($row['alias']) ? $objPage->alias : $row['alias'],
-                        'title'            => empty($row['title']) ? $objPage->title : $row['title'],
-                        'pageTitle'        => empty($row['pageTitle'])
-                            ? $objPage->pageTitle
-                            : $row['pageTitle'],
-                        'language'         => $language,
-                        'isActive'         => $language === $GLOBALS['TL_LANGUAGE'],
-                        'forceRowLanguage' => true
-                    );
+                    // Get all the available translations 
+                    $item = [
+                        'id' => $objPage->id,
+                        'alias' => $objPage->alias,
+                        'title' => $objPage->title,
+                        'pageTitle' => $objPage->pageTitle,
+                        'language' => $language,
+                        'isActive' => $language === $GLOBALS['TL_LANGUAGE'],
+                        'forceRowLanguage' => true,
+                    ];
+
+                    $objPageTranslations = I18nl10nTranslation::findItems(['ptable' => 'tl_page', 'pid' => $objPage->id]);
+
+                    while($objPageTranslations->next()) {
+                        $item[$objPageTranslations->field] = $objPageTranslations->valueText;
+                    }
 
                     // HOOK: add custom logic
                     if (isset($GLOBALS['TL_HOOKS']['i18nl10nUpdateLanguageSelectionItem'])
-                        && is_array($GLOBALS['TL_HOOKS']['i18nl10nUpdateLanguageSelectionItem'])
+                        && \is_array($GLOBALS['TL_HOOKS']['i18nl10nUpdateLanguageSelectionItem'])
                     ) {
                         foreach ($GLOBALS['TL_HOOKS']['i18nl10nUpdateLanguageSelectionItem'] as $callback) {
                             $stdClass = \System::importStatic($callback[0]);
@@ -163,27 +156,29 @@ class ModuleI18nl10nLanguageSelection extends \Module
             }
 
             // Add classes first and last
-            $last                  = count($items) - 1;
-            $items[0]['class']     = trim($items[0]['class'] . ' first');
-            $items[$last]['class'] = trim($items[$last]['class'] . ' last');
+            $last = \count($items) - 1;
+            $items[0]['class'] = trim($items[0]['class'].' first');
+            $items[$last]['class'] = trim($items[$last]['class'].' last');
 
             $objTemplate = new \BackendTemplate($this->i18nl10n_langTpl);
 
-            $objTemplate->type      = get_class($this);
-            $objTemplate->items     = $items;
+            $objTemplate->type = \get_class($this);
+            $objTemplate->items = $items;
             $objTemplate->languages = $langNative;
+
+            dump($items);
         }
 
         // Add stylesheets
-        if ($this->i18nl10n_langStyle !== 'disable') {
+        if ('disable' !== $this->i18nl10n_langStyle) {
             $assetsUrl = 'bundles/verstaerkeri18nl10n/';
 
             // Add global and selected style
-            $GLOBALS['TL_CSS'][] = $assetsUrl . 'css/i18nl10n_lang.css';
+            $GLOBALS['TL_CSS'][] = $assetsUrl.'css/i18nl10n_lang.css';
 
             // Add additional styles if needed
-            if (in_array($this->i18nl10n_langStyle, array('text', 'image', 'iso'))) {
-                $GLOBALS['TL_CSS'][] = $assetsUrl . 'css/i18nl10n_lang_' . $this->i18nl10n_langStyle . '.css';
+            if (\in_array($this->i18nl10n_langStyle, ['text', 'image', 'iso'], true)) {
+                $GLOBALS['TL_CSS'][] = $assetsUrl.'css/i18nl10n_lang_'.$this->i18nl10n_langStyle.'.css';
             }
         }
 
@@ -191,10 +186,10 @@ class ModuleI18nl10nLanguageSelection extends \Module
         $strUriParams = '';
 
         foreach ($_GET as $key => $value) {
-            if ($key === 'id') {
+            if ('id' === $key) {
                 continue;
             }
-            $strUriParams .= '/' . $key . '/' . \Input::get($key);
+            $strUriParams .= '/'.$key.'/'.\Input::get($key);
         }
 
         $this->Template->items = !empty($items) && isset($objTemplate) ? $objTemplate->parse() : '';

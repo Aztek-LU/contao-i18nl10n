@@ -41,6 +41,7 @@ class LoadDataContainerHook
                     // Bypass some Ajax securities by telling Contao that i18nl10n translations are in this DCA
                     foreach ($objI18nl10n->getAvailableLanguages(false, true) as $l) {
                         $GLOBALS['TL_DCA'][$strName]['fields'][sprintf('i18nl10n_%s_%s_%s_%s', $strName, $f, \Input::get('id'), $l)] = $GLOBALS['TL_DCA'][$strName]['fields'][$f];
+                        unset($GLOBALS['TL_DCA'][$strName]['fields'][sprintf('i18nl10n_%s_%s_%s_%s', $strName, $f, \Input::get('id'), $l)]['sql']);
                     }
 
                     $GLOBALS['TL_DCA'][$strName]['fields'][$f]['xlabel'][] = [\Verstaerker\I18nl10nBundle\Callback\WizardFieldCallback::class, 'addI18nl10nLabel'];

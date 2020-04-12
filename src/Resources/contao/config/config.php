@@ -60,17 +60,22 @@ $GLOBALS['FE_MOD']['i18nl10n']['i18nl10nLanguageSelection'] = 'Verstaerker\I18nl
  * MODELS
  */
 $GLOBALS['TL_MODELS'][\Verstaerker\I18nl10nBundle\Model\I18nl10nTranslation::getTable()] = 'Verstaerker\I18nl10nBundle\Model\I18nl10nTranslation';
+$GLOBALS['TL_MODELS'][\Verstaerker\I18nl10nBundle\Model\I18nl10nPageModel::getTable()] = 'Verstaerker\I18nl10nBundle\Model\I18nl10nPageModel';
 
 /*
  * HOOKS
  */
 $GLOBALS['TL_HOOKS']['initializeSystem'][] = ['Verstaerker\I18nl10nBundle\Hook\InitializeSystemHook', 'authorizeI18nl10nTables'];
+$GLOBALS['TL_HOOKS']['initializeSystem'][] = ['Verstaerker\I18nl10nBundle\Hook\InitializeSystemHook', 'initializeSystem'];
+
 $GLOBALS['TL_HOOKS']['loadDataContainer'][] = ['Verstaerker\I18nl10nBundle\Hook\LoadDataContainerHook', 'addColumns'];
 $GLOBALS['TL_HOOKS']['loadDataContainer'][] = ['Verstaerker\I18nl10nBundle\Hook\LoadDataContainerHook', 'addDynamicPtable'];
-/*$GLOBALS['TL_HOOKS']['initializeSystem'][] = ['Verstaerker\I18nl10nBundle\Hook\InitializeSystemHook', 'initializeSystem'];
-$GLOBALS['TL_HOOKS']['generateFrontendUrl'][] = ['Verstaerker\I18nl10nBundle\Hook\GenerateFrontendUrlHook', 'generateFrontendUrl'];
+
 $GLOBALS['TL_HOOKS']['getPageIdFromUrl'][] = ['Verstaerker\I18nl10nBundle\Hook\GetPageIdFromUrlHook', 'getPageIdFromUrl'];
-$GLOBALS['TL_HOOKS']['generateBreadcrumb'][] = ['Verstaerker\I18nl10nBundle\Hook\GenerateBreadcrumbHook', 'generateBreadcrumb'];
+$GLOBALS['TL_HOOKS']['generateFrontendUrl'][] = ['Verstaerker\I18nl10nBundle\Hook\GenerateFrontendUrlHook', 'generateFrontendUrl'];
+
+/*$GLOBALS['TL_HOOKS']['generateBreadcrumb'][] = ['Verstaerker\I18nl10nBundle\Hook\GenerateBreadcrumbHook', 'generateBreadcrumb'];
+
 $GLOBALS['TL_HOOKS']['executePostActions'][] = ['Verstaerker\I18nl10nBundle\Hook\ExecutePostActionsHook', 'executePostActions'];
 $GLOBALS['TL_HOOKS']['isVisibleElement'][] = ['Verstaerker\I18nl10nBundle\Hook\IsVisibleElementHook', 'isVisibleElement'];
 $GLOBALS['TL_HOOKS']['replaceInsertTags'][] = ['Verstaerker\I18nl10nBundle\Hook\ReplaceInsertTagsHook', 'replaceInsertTags'];
@@ -97,7 +102,7 @@ $GLOBALS['TL_HOOKS']['customizeSearch'][] = ['Verstaerker\I18nl10nBundle\Hook\Cu
 /*
  * PAGE TYPES
  */
-$GLOBALS['TL_PTY']['regular'] = 'Verstaerker\I18nl10nBundle\Pages\PageI18nl10nRegular';
+// $GLOBALS['TL_PTY']['regular'] = 'Verstaerker\I18nl10nBundle\Pages\PageI18nl10nRegular';
 
 /*
  * Inherit language permissions
