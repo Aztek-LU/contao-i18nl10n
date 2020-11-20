@@ -45,7 +45,7 @@ class InitializeSystemHook extends System
 
         // Get locale information for system and user
         $arrLanguages = I18nl10n::getInstance()->getAvailableLanguages();
-        $userLanguage = $this->request->getLocale();
+        $userLanguage = $this->request ? $this->request->getLocale() : null;
 
 
         // Fail if no languages were configured
